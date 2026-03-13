@@ -1,0 +1,7 @@
+bounded_context: "governance"
+service_id: "svc-gov-architecture-runbooks"
+application_id: "app.gov.architecture-runbooks"
+data_owner_pattern: "N/A"
+event_namespace: "evt.gov.architecture"
+owning_squad: "Architecture Board"
+wave: "4"
