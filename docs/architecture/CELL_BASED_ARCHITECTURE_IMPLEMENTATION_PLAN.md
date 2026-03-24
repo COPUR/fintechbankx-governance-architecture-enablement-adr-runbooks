@@ -2,8 +2,8 @@
 
 ## Repository
 
-- Name: \
-- Generated: \
+- Name: fintechbankx-governance-architecture-enablement-adr-runbooks
+- Generated: 2026-03-24
 
 ## Objective
 
