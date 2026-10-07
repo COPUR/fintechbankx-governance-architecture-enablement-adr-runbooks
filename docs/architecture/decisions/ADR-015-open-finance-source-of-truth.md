@@ -1,4 +1,6 @@
-# ADR-007: Open Finance Source of Truth
+# ADR-015: Open Finance Source of Truth
+
+> Renumbered from ADR-007 on 2026-10-07: that number is ADR-007 Docker Multi-Stage Architecture.
 
 ## Status
 Accepted
