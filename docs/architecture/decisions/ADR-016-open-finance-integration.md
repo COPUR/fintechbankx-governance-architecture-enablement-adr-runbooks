@@ -1,4 +1,6 @@
-# ADR-012: Open Finance Integration Architecture
+# ADR-016: Open Finance Integration Architecture
+
+> Renumbered from ADR-012 on 2026-10-07: that number is ADR-012 International Banking Compliance Framework.
 
 ## Status
 Proposed

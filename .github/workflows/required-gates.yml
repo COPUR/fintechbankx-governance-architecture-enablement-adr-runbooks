@@ -100,6 +100,10 @@ jobs:
             npx -y @asyncapi/cli@2.13.0 validate asyncapi/*.yml
           fi
 
+      - name: Guardrail - unique ADR numbers
+        shell: bash
+        run: bash scripts/ci/check-adr-numbers.sh
+
       - name: Guardrail - disallow generic map request payloads
         shell: bash
         run: |

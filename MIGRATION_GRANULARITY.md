@@ -19,4 +19,5 @@
 - This is an extraction seed for bounded-context split migration.
 - Follow-up refactoring may be needed to remove residual cross-context coupling.
 - Build artifacts and local machine files are excluded by policy.
+- 2026-10-07: ADRs from `docs/adr` and `docs/architecture/adr` were consolidated into `docs/architecture/decisions` with unique numbers (see its README). A re-sync must map those source folders into `docs/architecture/decisions` and keep the renumbering, or `scripts/ci/check-adr-numbers.sh` will fail.
 

@@ -1,633 +1,696 @@
-# ADR-009: AWS EKS Infrastructure Design for Enterprise Banking System
+# ADR-009: AWS EKS Infrastructure Design
 
 ## Status
-**Accepted** - December 2024
+**ACCEPTED** - Enterprise Banking Cloud Infrastructure
+
+## Date
+2025-01-08
 
 ## Context
 
-The Enterprise Loan Management System requires a cloud infrastructure that meets stringent banking regulatory requirements, provides high availability across multiple regions, and supports secure microservices architecture. The infrastructure must handle sensitive financial data while maintaining compliance with PCI DSS, SOX, GDPR, and other banking regulations.
+The Enterprise Loan Management System requires a robust, scalable, and secure cloud infrastructure capable of handling enterprise banking workloads with strict compliance requirements. The system must support:
+
+- **Regulatory Compliance**: PCI DSS, SOX, GDPR, FAPI 2.0
+- **High Availability**: 99.999% uptime SLA
+- **Security**: Zero-trust architecture, data encryption, audit trails
+- **Scalability**: Auto-scaling based on demand
+- **Multi-tenancy**: Support for multiple banking entities
+- **Disaster Recovery**: RTO < 15 minutes, RPO < 5 minutes
+- **Cost Optimization**: Efficient resource utilization
 
 ## Decision
 
-We will implement **AWS EKS (Elastic Kubernetes Service)** as our managed Kubernetes platform with a comprehensive multi-tier architecture including VPC networking, managed databases, caching, and comprehensive security controls.
+We will implement a comprehensive AWS EKS (Elastic Kubernetes Service) infrastructure with the following architecture:
 
-### Core Infrastructure Decision
+### 1. Multi-Region Architecture
+- **Primary Region**: us-east-1 (N. Virginia) 
+- **Secondary Region**: us-west-2 (Oregon)
+- **DR Region**: eu-west-1 (Ireland)
 
-```hcl
-# AWS EKS Banking Infrastructure
-resource "aws_eks_cluster" "banking_cluster" {
-  name     = "enterprise-banking-eks"
-  role_arn = aws_iam_role.eks_cluster_role.arn
-  version  = "1.28"
-  
-  vpc_config {
-    subnet_ids              = concat(aws_subnet.private[*].id, aws_subnet.public[*].id)
-    endpoint_private_access = true
-    endpoint_public_access  = true
-    public_access_cidrs     = ["0.0.0.0/0"]
-  }
-  
-  encryption_config {
-    provider {
-      key_arn = aws_kms_key.eks_encryption.arn
-    }
-    resources = ["secrets"]
-  }
-  
-  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
-}
+### 2. EKS Cluster Design
+- **Production Clusters**: 3 clusters across 3 AZs per region
+- **Staging Clusters**: 2 clusters across 2 AZs
+- **Development Clusters**: 1 cluster, single AZ
+
+### 3. Network Architecture
+- **VPC**: Multi-AZ with private and public subnets
+- **Security Groups**: Granular access control
+- **Network ACLs**: Additional layer of security
+- **NAT Gateways**: High availability internet access
+- **Transit Gateway**: Multi-VPC connectivity
+
+### 4. Security Implementation
+- **IAM Roles**: Fine-grained permissions with RBAC
+- **KMS**: Customer-managed keys for encryption
+- **Secrets Manager**: Credential management
+- **Certificate Manager**: SSL/TLS certificate automation
+- **GuardDuty**: Threat detection
+- **Security Hub**: Centralized security findings
+
+### 5. Storage and Data
+- **EFS**: Shared persistent storage
+- **EBS**: High-performance block storage
+- **S3**: Object storage with versioning and encryption
+- **RDS**: Aurora PostgreSQL with read replicas
+- **ElastiCache**: Redis for caching
+- **DynamoDB**: Configuration and session storage
+
+### 6. Monitoring and Observability
+- **CloudWatch**: Metrics, logs, and alarms
+- **X-Ray**: Distributed tracing
+- **Prometheus**: Kubernetes metrics
+- **Grafana**: Visualization and dashboards
+- **ElasticSearch**: Log aggregation and search
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              AWS GLOBAL INFRASTRUCTURE                          │
+│                                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐             │
+│  │   us-east-1     │    │   us-west-2     │    │   eu-west-1     │             │
+│  │   (Primary)     │    │  (Secondary)    │    │     (DR)        │             │
+│  │                 │    │                 │    │                 │             │
+│  │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │             │
+│  │ │     EKS     │ │    │ │     EKS     │ │    │ │     EKS     │ │             │
+│  │ │  Production │ │    │ │  Production │ │    │ │     DR      │ │             │
+│  │ │   Cluster   │ │    │ │   Cluster   │ │    │ │   Cluster   │ │             │
+│  │ │             │ │    │ │             │ │    │ │             │ │             │
+│  │ │  3 AZs      │ │    │ │  3 AZs      │ │    │ │  2 AZs      │ │             │
+│  │ │  6 Nodes    │ │    │ │  6 Nodes    │ │    │ │  4 Nodes    │ │             │
+│  │ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │             │
+│  │                 │    │                 │    │                 │             │
+│  │ ┌─────────────┐ │    │ ┌─────────────┐ │    │                 │             │
+│  │ │   Staging   │ │    │ │   Staging   │ │    │                 │             │
+│  │ │   Cluster   │ │    │ │   Cluster   │ │    │                 │             │
+│  │ │   2 AZs     │ │    │ │   2 AZs     │ │    │                 │             │
+│  │ │   4 Nodes   │ │    │ │   4 Nodes   │ │    │                 │             │
+│  │ └─────────────┘ │    │ └─────────────┘ │    │                 │             │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘             │
+│                                                                                 │
+│  ┌─────────────────────────────────────────────────────────────────────────┐   │
+│  │                        SHARED SERVICES                                 │   │
+│  │                                                                         │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │   │
+│  │  │     IAM     │  │     KMS     │  │  Secrets    │  │Certificate  │    │   │
+│  │  │   Roles     │  │   Keys      │  │  Manager    │  │  Manager    │    │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │   │
+│  │                                                                         │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │   │
+│  │  │ GuardDuty   │  │Security Hub │  │ CloudTrail  │  │   Config    │    │   │
+│  │  │             │  │             │  │             │  │             │    │   │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │   │
+│  └─────────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Technical Implementation
+## Implementation Details
 
-### 1. **Network Architecture**
+### 1. VPC Configuration
 
-#### Multi-AZ VPC Design
-```hcl
-# Banking-grade VPC with multiple availability zones
-resource "aws_vpc" "banking_vpc" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+```yaml
+# Primary VPC (us-east-1)
+VPC_CIDR: 10.0.0.0/16
+
+Subnets:
+  Public:
+    - 10.0.1.0/24 (AZ-a)
+    - 10.0.2.0/24 (AZ-b)
+    - 10.0.3.0/24 (AZ-c)
   
-  tags = {
-    Name                                           = "banking-vpc"
-    "kubernetes.io/cluster/enterprise-banking-eks" = "shared"
-    "banking.compliance/pci-dss"                   = "required"
-    "banking.compliance/sox"                       = "required"
-  }
-}
-
-# Private subnets for banking workloads
-resource "aws_subnet" "private" {
-  count             = 3
-  vpc_id            = aws_vpc.banking_vpc.id
-  cidr_block        = "10.0.${count.index + 1}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  Private:
+    - 10.0.10.0/24 (AZ-a)
+    - 10.0.11.0/24 (AZ-b)
+    - 10.0.12.0/24 (AZ-c)
   
-  tags = {
-    Name                                           = "banking-private-${count.index + 1}"
-    "kubernetes.io/cluster/enterprise-banking-eks" = "owned"
-    "kubernetes.io/role/internal-elb"              = "1"
-    "banking.security/tier"                        = "secure"
-  }
-}
-
-# Public subnets for load balancers
-resource "aws_subnet" "public" {
-  count                   = 3
-  vpc_id                  = aws_vpc.banking_vpc.id
-  cidr_block              = "10.0.${count.index + 10}.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-  map_public_ip_on_launch = true
-  
-  tags = {
-    Name                                           = "banking-public-${count.index + 1}"
-    "kubernetes.io/cluster/enterprise-banking-eks" = "owned"
-    "kubernetes.io/role/elb"                       = "1"
-    "banking.security/tier"                        = "dmz"
-  }
-}
+  Database:
+    - 10.0.20.0/24 (AZ-a)
+    - 10.0.21.0/24 (AZ-b)
+    - 10.0.22.0/24 (AZ-c)
 ```
 
-#### Security Groups for Banking
-```hcl
-# EKS Cluster Security Group
-resource "aws_security_group" "eks_cluster_sg" {
-  name        = "banking-eks-cluster-sg"
-  description = "Security group for EKS cluster with banking compliance"
-  vpc_id      = aws_vpc.banking_vpc.id
+### 2. EKS Cluster Specifications
 
-  # HTTPS access for banking APIs
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
-  
-  # Kubernetes API access
-  ingress {
-    from_port   = 6443
-    to_port     = 6443
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
+```yaml
+Production Cluster:
+  Version: 1.28
+  Endpoint: Private
+  Node Groups:
+    - Banking Services:
+        Instance Type: c5.2xlarge
+        Min Size: 3
+        Max Size: 12
+        Desired: 6
+    - AI/ML Workloads:
+        Instance Type: g4dn.xlarge
+        Min Size: 2
+        Max Size: 8
+        Desired: 4
+    - Compliance Services:
+        Instance Type: m5.xlarge
+        Min Size: 2
+        Max Size: 6
+        Desired: 3
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  tags = {
-    Name = "banking-eks-cluster-sg"
-    "banking.compliance/network-security" = "required"
-  }
-}
+Staging Cluster:
+  Version: 1.28
+  Endpoint: Private
+  Node Groups:
+    - General Purpose:
+        Instance Type: c5.large
+        Min Size: 2
+        Max Size: 8
+        Desired: 4
 ```
 
-### 2. **EKS Node Groups Configuration**
+### 3. Security Configuration
 
-#### Banking System Node Group
-```hcl
-resource "aws_eks_node_group" "banking_system" {
-  cluster_name    = aws_eks_cluster.banking_cluster.name
-  node_group_name = "banking-system-nodes"
-  node_role_arn   = aws_iam_role.eks_node_group_role.arn
-  subnet_ids      = aws_subnet.private[*].id
+```yaml
+IAM Roles:
+  EKS Cluster Service Role:
+    Policies:
+      - AmazonEKSClusterPolicy
+      - Custom Banking Compliance Policy
   
-  instance_types = ["m5.large", "m5.xlarge"]
-  ami_type       = "AL2_x86_64"
-  capacity_type  = "ON_DEMAND"
+  Node Group Role:
+    Policies:
+      - AmazonEKSWorkerNodePolicy
+      - AmazonEKS_CNI_Policy
+      - AmazonEC2ContainerRegistryReadOnly
   
-  scaling_config {
-    desired_size = 3
-    max_size     = 10
-    min_size     = 3
-  }
-  
-  update_config {
-    max_unavailable_percentage = 25
-  }
-  
-  # Banking workload taints
-  taint {
-    key    = "banking.workload/type"
-    value  = "core-banking"
-    effect = "NO_SCHEDULE"
-  }
-  
-  labels = {
-    "banking.node/type"     = "core-banking"
-    "banking.security/tier" = "secure"
-  }
-  
-  tags = {
-    Name = "banking-system-nodes"
-    "banking.compliance/pci-dss" = "required"
-  }
-}
+  Pod Execution Role:
+    Policies:
+      - Custom Pod Security Policy
+      - Banking Service Access Policy
 
-# Dedicated monitoring node group
-resource "aws_eks_node_group" "monitoring" {
-  cluster_name    = aws_eks_cluster.banking_cluster.name
-  node_group_name = "monitoring-nodes"
-  node_role_arn   = aws_iam_role.eks_node_group_role.arn
-  subnet_ids      = aws_subnet.private[*].id
+KMS Keys:
+  - EKS Secrets Encryption
+  - EBS Volume Encryption
+  - S3 Bucket Encryption
+  - RDS Encryption
+  - CloudWatch Logs Encryption
+
+Security Groups:
+  EKS Control Plane:
+    Ingress:
+      - Port 443: From Node Groups
+      - Port 10250: From Node Groups
+    Egress:
+      - All traffic to Node Groups
   
-  instance_types = ["m5.large"]
-  ami_type       = "AL2_x86_64"
-  capacity_type  = "SPOT"  # Cost optimization for monitoring workloads
-  
-  scaling_config {
-    desired_size = 2
-    max_size     = 5
-    min_size     = 2
-  }
-  
-  taint {
-    key    = "banking.workload/type"
-    value  = "monitoring"
-    effect = "NO_SCHEDULE"
-  }
-  
-  labels = {
-    "banking.node/type" = "monitoring"
-  }
-}
+  Node Groups:
+    Ingress:
+      - Port 443: From Control Plane
+      - Port 1025-65535: From other nodes
+      - Port 53: DNS
+    Egress:
+      - All traffic to internet (via NAT)
+      - All traffic to Control Plane
 ```
 
-### 3. **Database Infrastructure**
+### 4. Storage Configuration
 
-#### RDS PostgreSQL for Banking Data
-```hcl
-resource "aws_db_instance" "banking_postgresql" {
-  identifier     = "banking-postgresql-15"
-  engine         = "postgres"
-  engine_version = "15.4"
-  instance_class = "db.r5.xlarge"
+```yaml
+EFS File Systems:
+  Shared Application Data:
+    Performance Mode: General Purpose
+    Throughput Mode: Provisioned (500 MB/s)
+    Encryption: Enabled
+    Backup: Daily
+
+EBS Volumes:
+  Node Storage:
+    Type: gp3
+    Size: 100GB
+    IOPS: 3000
+    Encryption: Enabled
   
-  allocated_storage     = 500
-  max_allocated_storage = 1000
-  storage_type          = "gp3"
-  storage_encrypted     = true
-  kms_key_id           = aws_kms_key.rds_encryption.arn
+  Database Storage:
+    Type: io2
+    Size: 1TB
+    IOPS: 10000
+    Encryption: Enabled
+
+S3 Buckets:
+  Application Artifacts:
+    Versioning: Enabled
+    Encryption: SSE-KMS
+    Lifecycle: 90 days to IA, 365 days to Glacier
   
-  db_name  = "banking_system"
-  username = "banking_admin"
-  password = var.db_password
-  
-  # Multi-AZ for high availability
-  multi_az = true
-  
-  # Backup configuration for banking compliance
-  backup_retention_period = 30  # 30 days for banking regulations
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "sun:04:00-sun:05:00"
-  
-  # Security configuration
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
-  db_subnet_group_name   = aws_db_subnet_group.banking_subnet_group.name
-  
-  # Performance monitoring
-  performance_insights_enabled = true
-  monitoring_interval         = 60
-  monitoring_role_arn         = aws_iam_role.rds_monitoring_role.arn
-  
-  # Banking compliance tags
-  tags = {
-    Name = "banking-postgresql"
-    "banking.compliance/pci-dss"     = "required"
-    "banking.compliance/sox"         = "required"
-    "banking.compliance/gdpr"        = "required"
-    "banking.backup/retention"       = "30-days"
-    "banking.encryption/at-rest"     = "aes-256"
-  }
-  
-  # Prevent accidental deletion
-  deletion_protection = true
-  skip_final_snapshot = false
-  final_snapshot_identifier = "banking-postgresql-final-snapshot"
-}
+  Audit Logs:
+    Versioning: Enabled
+    Encryption: SSE-KMS
+    Retention: 7 years
+    Compliance: WORM
 ```
 
-#### ElastiCache Redis for Banking Sessions
-```hcl
-resource "aws_elasticache_replication_group" "banking_redis" {
-  replication_group_id       = "banking-redis-cluster"
-  description                = "Redis cluster for banking session management"
-  
-  port                       = 6379
-  parameter_group_name       = "default.redis7"
-  node_type                  = "cache.r6g.large"
-  num_cache_clusters         = 3
-  
-  # Encryption for banking compliance
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = true
-  auth_token                 = var.redis_auth_token
-  
-  # Multi-AZ for high availability
-  multi_az_enabled           = true
-  automatic_failover_enabled = true
-  
-  # Backup configuration
-  snapshot_retention_limit = 7
-  snapshot_window         = "03:00-05:00"
-  
-  # Network security
-  subnet_group_name  = aws_elasticache_subnet_group.banking_cache_subnet.name
-  security_group_ids = [aws_security_group.redis_sg.id]
-  
-  tags = {
-    Name = "banking-redis-cluster"
-    "banking.compliance/encryption" = "aes-256"
-    "banking.data/type"            = "session-cache"
-  }
-}
+### 5. Database Configuration
+
+```yaml
+RDS Aurora PostgreSQL:
+  Engine Version: 13.7
+  Instance Class: db.r6g.2xlarge
+  Multi-AZ: true
+  Read Replicas: 2 per region
+  Backup Retention: 35 days
+  Point-in-Time Recovery: Enabled
+  Encryption: KMS
+  Performance Insights: Enabled
+
+ElastiCache Redis:
+  Engine Version: 7.0
+  Node Type: cache.r6g.large
+  Cluster Mode: Enabled
+  Replicas: 2 per shard
+  Shards: 3
+  Encryption: In-transit and at-rest
+  Backup: Daily snapshots
+
+DynamoDB:
+  Tables:
+    - Session Store
+    - Configuration Store
+    - Audit Trail
+  Encryption: Customer managed KMS
+  Point-in-Time Recovery: Enabled
+  Backup: On-demand + scheduled
 ```
 
-### 4. **Application Load Balancer**
+### 6. Networking and Connectivity
 
-#### Banking API Gateway Load Balancer
-```hcl
-resource "aws_lb" "banking_alb" {
-  name               = "banking-api-gateway-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
-  subnets           = aws_subnet.public[*].id
-  
-  # Banking security requirements
-  enable_deletion_protection = true
-  drop_invalid_header_fields = true
-  
-  # Access logging for compliance
-  access_logs {
-    bucket  = aws_s3_bucket.banking_access_logs.bucket
-    prefix  = "alb-access-logs"
-    enabled = true
-  }
-  
-  tags = {
-    Name = "banking-api-gateway-alb"
-    "banking.compliance/access-logging" = "required"
-    "banking.security/waf"             = "enabled"
-  }
-}
+```yaml
+Transit Gateway:
+  - Connect Production VPCs
+  - Connect to on-premises via VPN
+  - Route table isolation
 
-# WAF for banking API protection
-resource "aws_wafv2_web_acl" "banking_waf" {
-  name  = "banking-api-protection"
-  scope = "REGIONAL"
-  
-  default_action {
-    allow {}
-  }
-  
-  # Rate limiting for banking APIs
-  rule {
-    name     = "banking-rate-limit"
-    priority = 1
-    
-    action {
-      block {}
-    }
-    
-    statement {
-      rate_based_statement {
-        limit              = 2000
-        aggregate_key_type = "IP"
-      }
-    }
-    
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "banking-rate-limit"
-      sampled_requests_enabled   = true
-    }
-  }
-  
-  tags = {
-    Name = "banking-api-protection"
-    "banking.security/ddos-protection" = "enabled"
-  }
-}
+VPC Peering:
+  - Cross-region replication
+  - Disaster recovery connectivity
+
+NAT Gateways:
+  - High availability (one per AZ)
+  - Bandwidth: 45 Gbps
+
+Internet Gateway:
+  - Public subnet internet access
+  - ALB/NLB connectivity
+
+VPC Endpoints:
+  - S3 Gateway Endpoint
+  - DynamoDB Gateway Endpoint
+  - Interface Endpoints:
+    - EC2, ECR, KMS, Secrets Manager
+    - CloudWatch, X-Ray
 ```
 
-## Security and Compliance
+### 7. Load Balancing and Ingress
 
-### 1. **KMS Encryption Keys**
+```yaml
+Application Load Balancer:
+  Scheme: Internet-facing
+  Security Groups: ALB-SG
+  Target Groups:
+    - Banking API (HTTPS:443)
+    - Health Checks (/health)
+  
+  Listeners:
+    - HTTPS:443 with SSL termination
+    - HTTP:80 redirect to HTTPS
 
-```hcl
-# EKS encryption key
-resource "aws_kms_key" "eks_encryption" {
-  description             = "KMS key for EKS secrets encryption"
-  deletion_window_in_days = 7
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable banking admin access"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      }
-    ]
-  })
-  
-  tags = {
-    Name = "banking-eks-encryption"
-    "banking.compliance/encryption" = "aes-256"
-  }
-}
+Network Load Balancer:
+  Scheme: Internal
+  Cross-zone Load Balancing: Enabled
+  Target Groups:
+    - Internal Services
+    - Database connections
 
-# RDS encryption key
-resource "aws_kms_key" "rds_encryption" {
-  description             = "KMS key for RDS encryption"
-  deletion_window_in_days = 7
-  
-  tags = {
-    Name = "banking-rds-encryption"
-    "banking.compliance/pci-dss" = "required"
-  }
-}
+Kubernetes Ingress:
+  Controller: AWS Load Balancer Controller
+  Annotations:
+    - alb.ingress.kubernetes.io/scheme: internet-facing
+    - alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-2017-01
+    - alb.ingress.kubernetes.io/certificate-arn: ${CERTIFICATE_ARN}
 ```
 
-### 2. **IAM Roles and Policies**
+### 8. Auto Scaling Configuration
 
-#### EKS Cluster Service Role
-```hcl
-resource "aws_iam_role" "eks_cluster_role" {
-  name = "banking-eks-cluster-role"
-  
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "eks.amazonaws.com"
-        }
-      }
-    ]
-  })
-  
-  tags = {
-    Name = "banking-eks-cluster-role"
-    "banking.security/role" = "cluster-service"
-  }
-}
+```yaml
+Cluster Autoscaler:
+  Version: 1.28.0
+  Configuration:
+    scale-down-enabled: true
+    scale-down-delay-after-add: 10m
+    scale-down-unneeded-time: 10m
+    skip-nodes-with-local-storage: false
 
-# Attach required policies
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster_role.name
-}
+Horizontal Pod Autoscaler:
+  Banking Services:
+    Min Replicas: 3
+    Max Replicas: 20
+    Metrics:
+      - CPU: 70%
+      - Memory: 80%
+      - Custom: Queue Length
+
+Vertical Pod Autoscaler:
+  Update Mode: Auto
+  Resource Policy:
+    Banking Services: CPU 100m-2000m, Memory 256Mi-4Gi
+    AI Services: CPU 500m-4000m, Memory 1Gi-8Gi
 ```
 
-## Monitoring and Observability
+### 9. Monitoring and Alerting
 
-### 1. **CloudWatch Configuration**
-
-```hcl
-# CloudWatch log group for EKS
-resource "aws_cloudwatch_log_group" "eks_cluster_logs" {
-  name              = "/aws/eks/enterprise-banking-eks/cluster"
-  retention_in_days = 30
+```yaml
+CloudWatch:
+  Metrics:
+    - EKS Cluster Health
+    - Node Group Utilization
+    - Pod Performance
+    - Application Metrics
   
-  tags = {
-    Name = "banking-eks-cluster-logs"
-    "banking.compliance/log-retention" = "30-days"
-  }
-}
+  Alarms:
+    - High CPU (>80% for 5 minutes)
+    - High Memory (>85% for 5 minutes)
+    - Pod Restarts (>3 in 10 minutes)
+    - Failed Health Checks
 
-# Banking-specific CloudWatch dashboard
-resource "aws_cloudwatch_dashboard" "banking_dashboard" {
-  dashboard_name = "banking-system-overview"
+Prometheus:
+  Deployment: Kubernetes native
+  Storage: EBS persistent volumes
+  Retention: 30 days
+  Scrape Interval: 15s
   
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type   = "metric"
-        x      = 0
-        y      = 0
-        width  = 12
-        height = 6
-        
-        properties = {
-          metrics = [
-            ["AWS/EKS", "cluster_failed_request_count", "ClusterName", "enterprise-banking-eks"],
-            ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "banking-postgresql-15"],
-            ["AWS/ElastiCache", "CPUUtilization", "CacheClusterId", "banking-redis-cluster"]
-          ]
-          period = 300
-          stat   = "Average"
-          region = "us-west-2"
-          title  = "Banking System Health Metrics"
-        }
-      }
-    ]
-  })
-}
+  Metrics:
+    - kube-state-metrics
+    - node-exporter
+    - Banking application metrics
+
+Grafana:
+  Deployment: Kubernetes
+  Authentication: OIDC with AWS SSO
+  Dashboards:
+    - Kubernetes Cluster Overview
+    - Banking Application Metrics
+    - Infrastructure Health
+    - Compliance Dashboards
+
+AWS X-Ray:
+  Tracing: Enabled for all services
+  Sampling Rate: 10%
+  Retention: 30 days
+  Service Map: Full topology
 ```
 
-### 2. **AWS Config for Compliance**
+### 10. Backup and Disaster Recovery
 
-```hcl
-# Config recorder for compliance monitoring
-resource "aws_config_configuration_recorder" "banking_config" {
-  name     = "banking-compliance-recorder"
-  role_arn = aws_iam_role.config_role.arn
+```yaml
+EKS Backup Strategy:
+  Velero:
+    Storage: S3 buckets
+    Schedule: Daily at 2 AM UTC
+    Retention: 30 days
+    Cross-region replication: Enabled
+
+Database Backup:
+  RDS:
+    Automated: Daily, 35-day retention
+    Manual: Before major updates
+    Cross-region: Automated snapshots
   
-  recording_group {
-    all_supported                 = true
-    include_global_resource_types = true
-  }
-}
+  DynamoDB:
+    Point-in-time recovery: Enabled
+    On-demand backups: Weekly
+    Cross-region replication: Active
 
-# Compliance rules for banking
-resource "aws_config_config_rule" "encrypted_volumes" {
-  name = "banking-encrypted-ebs-volumes"
-  
-  source {
-    owner             = "AWS"
-    source_identifier = "ENCRYPTED_VOLUMES"
-  }
-  
-  depends_on = [aws_config_configuration_recorder.banking_config]
-}
-```
+Application Data:
+  EFS: AWS Backup daily
+  EBS: Snapshot lifecycle policy
+  S3: Cross-region replication
 
-## Backup and Disaster Recovery
-
-### 1. **Automated Backup Strategy**
-
-```hcl
-# Backup vault for banking compliance
-resource "aws_backup_vault" "banking_backup_vault" {
-  name        = "banking-backup-vault"
-  kms_key_arn = aws_kms_key.backup_encryption.arn
-  
-  tags = {
-    Name = "banking-backup-vault"
-    "banking.compliance/backup-encryption" = "required"
-  }
-}
-
-# Backup plan for banking data
-resource "aws_backup_plan" "banking_backup_plan" {
-  name = "banking-backup-plan"
-  
-  rule {
-    rule_name         = "daily_backup"
-    target_vault_name = aws_backup_vault.banking_backup_vault.name
-    schedule          = "cron(0 5 ? * * *)"  # 5 AM UTC daily
-    
-    recovery_point_tags = {
-      "banking.backup/type" = "daily"
-    }
-    
-    lifecycle {
-      cold_storage_after = 30
-      delete_after       = 365  # 1 year retention for banking
-    }
-  }
-}
+Disaster Recovery:
+  RTO: 15 minutes
+  RPO: 5 minutes
+  Testing: Monthly DR drills
+  Documentation: Runbook automation
 ```
 
 ## Cost Optimization
 
-### 1. **Resource Optimization**
+### 1. Instance Selection
+- **Spot Instances**: 30% of non-critical workloads
+- **Reserved Instances**: 50% baseline capacity
+- **Savings Plans**: Compute optimization
 
-- **Spot Instances**: Used for monitoring workloads (non-critical)
-- **Reserved Instances**: Core banking workloads for predictable costs
-- **Auto Scaling**: Dynamic scaling based on banking transaction patterns
-- **Storage Optimization**: gp3 volumes for better price-performance
+### 2. Resource Right-sizing
+- **VPA**: Automatic resource adjustment
+- **Cluster Autoscaler**: Dynamic scaling
+- **Scheduled Scaling**: Predictable patterns
 
-### 2. **Cost Monitoring**
+### 3. Storage Optimization
+- **EBS gp3**: Cost-effective high performance
+- **S3 Intelligent Tiering**: Automatic cost optimization
+- **EFS Intelligent Tiering**: Infrequent access optimization
 
-```hcl
-# Cost anomaly detection for banking workloads
-resource "aws_ce_anomaly_detector" "banking_cost_anomaly" {
-  name         = "banking-cost-anomaly-detector"
-  monitor_type = "DIMENSIONAL"
+### 4. Network Cost Control
+- **VPC Endpoints**: Reduce NAT Gateway costs
+- **CloudFront**: Global content delivery
+- **Direct Connect**: Predictable network costs
+
+## Security Implementation
+
+### 1. Network Security
+```yaml
+Security Groups:
+  Banking-API-SG:
+    Inbound:
+      - 443/tcp from ALB-SG
+      - 8080/tcp from ALB-SG
+    Outbound:
+      - 443/tcp to 0.0.0.0/0
+      - 5432/tcp to DB-SG
   
-  specification = jsonencode({
-    DimensionKey = "SERVICE"
-    MatchOptions = ["EQUALS"]
-    Values       = ["Amazon Elastic Kubernetes Service", "Amazon RDS", "Amazon ElastiCache"]
-  })
+  Database-SG:
+    Inbound:
+      - 5432/tcp from Banking-API-SG
+      - 6379/tcp from Banking-API-SG
+    Outbound: None
+
+Network ACLs:
+  Public Subnet:
+    Inbound:
+      - 443/tcp from 0.0.0.0/0
+      - 80/tcp from 0.0.0.0/0
+    Outbound:
+      - 443/tcp to 0.0.0.0/0
+      - 80/tcp to 0.0.0.0/0
   
-  tags = {
-    Name = "banking-cost-monitoring"
-  }
-}
+  Private Subnet:
+    Inbound:
+      - All from VPC CIDR
+    Outbound:
+      - 443/tcp to 0.0.0.0/0
 ```
+
+### 2. Identity and Access Management
+```yaml
+RBAC Policies:
+  Banking Developers:
+    Resources: ["pods", "services", "deployments"]
+    Verbs: ["get", "list", "create", "update", "patch"]
+    Namespaces: ["banking-dev", "banking-staging"]
+  
+  Production Operators:
+    Resources: ["*"]
+    Verbs: ["get", "list", "watch"]
+    Namespaces: ["banking-prod"]
+  
+  Security Team:
+    Resources: ["*"]
+    Verbs: ["*"]
+    Namespaces: ["*"]
+
+Pod Security Standards:
+  Level: Restricted
+  Policies:
+    - No privileged containers
+    - No host network/PID/IPC
+    - Read-only root filesystem
+    - Non-root user required
+    - Resource limits mandatory
+```
+
+### 3. Encryption
+```yaml
+Encryption at Rest:
+  EBS Volumes: KMS encryption
+  EFS: KMS encryption
+  S3 Buckets: SSE-KMS
+  RDS: KMS encryption
+  Secrets: KMS encryption
+
+Encryption in Transit:
+  Service Mesh: mTLS
+  Database: SSL/TLS
+  Cache: TLS
+  External APIs: TLS 1.3
+  Load Balancers: SSL termination
+```
+
+## Compliance Requirements
+
+### 1. PCI DSS Compliance
+- **Network Segmentation**: Isolated subnets for card data
+- **Encryption**: All data encrypted at rest and in transit
+- **Access Control**: Strict IAM policies and RBAC
+- **Monitoring**: Comprehensive logging and alerting
+- **Vulnerability Scanning**: Regular security assessments
+
+### 2. SOX Compliance
+- **Change Management**: GitOps with approval workflows
+- **Audit Trails**: Immutable logs in CloudTrail
+- **Access Reviews**: Quarterly IAM audits
+- **Segregation of Duties**: Role-based access control
+- **Data Integrity**: Backup and recovery validation
+
+### 3. GDPR Compliance
+- **Data Sovereignty**: Regional data residency
+- **Data Encryption**: Customer-managed keys
+- **Access Logging**: Detailed audit trails
+- **Data Retention**: Automated lifecycle policies
+- **Right to be Forgotten**: Data deletion capabilities
+
+## Implementation Phases
+
+### Phase 1: Foundation Infrastructure (Weeks 1-2)
+1. **VPC Setup**: Multi-AZ networking with security groups
+2. **IAM Configuration**: Roles, policies, and access management
+3. **Security Services**: GuardDuty, Security Hub, Config
+4. **Base Monitoring**: CloudWatch, CloudTrail setup
+
+### Phase 2: EKS Cluster Deployment (Weeks 3-4)
+1. **Cluster Creation**: Production and staging environments
+2. **Node Groups**: Auto-scaling configurations
+3. **Networking**: CNI, load balancers, ingress controllers
+4. **Storage**: EFS, EBS, and persistent volume setup
+
+### Phase 3: Database and Storage (Weeks 5-6)
+1. **RDS Aurora**: Multi-AZ PostgreSQL with read replicas
+2. **ElastiCache**: Redis cluster with high availability
+3. **S3 Buckets**: Application data and backup storage
+4. **DynamoDB**: Configuration and session management
+
+### Phase 4: Security Hardening (Weeks 7-8)
+1. **Pod Security**: Standards and admission controllers
+2. **Network Policies**: Kubernetes-native security
+3. **Secrets Management**: Integration with AWS Secrets Manager
+4. **Certificate Management**: Automated SSL/TLS
+
+### Phase 5: Monitoring and Observability (Weeks 9-10)
+1. **Prometheus Setup**: Metrics collection and storage
+2. **Grafana Deployment**: Dashboards and visualization
+3. **Log Aggregation**: ELK stack or CloudWatch Logs Insights
+4. **Distributed Tracing**: AWS X-Ray integration
+
+### Phase 6: Disaster Recovery (Weeks 11-12)
+1. **Cross-region Setup**: Secondary region deployment
+2. **Backup Configuration**: Automated backup strategies
+3. **DR Testing**: Regular disaster recovery drills
+4. **Runbook Creation**: Automated recovery procedures
+
+## Maintenance and Operations
+
+### 1. Regular Maintenance
+- **Cluster Upgrades**: Quarterly Kubernetes version updates
+- **Node Patching**: Monthly security updates
+- **Certificate Rotation**: Automated every 90 days
+- **Backup Verification**: Weekly restore testing
+
+### 2. Security Operations
+- **Vulnerability Scanning**: Daily container scans
+- **Penetration Testing**: Quarterly assessments
+- **Security Reviews**: Monthly access audits
+- **Incident Response**: 24/7 SOC monitoring
+
+### 3. Performance Optimization
+- **Resource Analysis**: Weekly capacity planning
+- **Cost Reviews**: Monthly cost optimization
+- **Performance Tuning**: Continuous optimization
+- **Scaling Analysis**: Load testing and planning
+
+## Risk Mitigation
+
+### 1. Technical Risks
+- **Single Point of Failure**: Multi-AZ and multi-region deployment
+- **Data Loss**: Multiple backup strategies and replication
+- **Security Breaches**: Defense-in-depth security model
+- **Performance Degradation**: Auto-scaling and monitoring
+
+### 2. Operational Risks
+- **Human Error**: Infrastructure as Code and automation
+- **Knowledge Gaps**: Comprehensive documentation and training
+- **Vendor Lock-in**: Kubernetes-native solutions
+- **Compliance Violations**: Continuous compliance monitoring
+
+### 3. Business Risks
+- **Cost Overruns**: Budget monitoring and alerts
+- **Service Disruption**: High availability architecture
+- **Regulatory Changes**: Flexible compliance framework
+- **Skill Shortage**: Cross-training and knowledge sharing
+
+## Success Metrics
+
+### 1. Availability Metrics
+- **Uptime**: 99.999% availability target
+- **MTTR**: Mean Time to Recovery < 15 minutes
+- **MTBF**: Mean Time Between Failures > 720 hours
+
+### 2. Performance Metrics
+- **Response Time**: API calls < 100ms p95
+- **Throughput**: 10,000 requests/second sustained
+- **Resource Utilization**: CPU < 70%, Memory < 80%
+
+### 3. Security Metrics
+- **Security Incidents**: Zero security breaches
+- **Compliance Score**: 100% audit compliance
+- **Vulnerability Remediation**: < 24 hours for critical
+
+### 4. Cost Metrics
+- **Cost per Transaction**: Optimized to budget targets
+- **Resource Efficiency**: > 85% utilization
+- **Cost Predictability**: < 5% variance from budget
 
 ## Consequences
 
-### Positive
-- ✅ **Banking Compliance**: Full compliance with PCI DSS, SOX, GDPR requirements
-- ✅ **High Availability**: Multi-AZ deployment with 99.99% availability SLA
-- ✅ **Security**: Zero-trust networking with comprehensive encryption
-- ✅ **Scalability**: Auto-scaling based on banking workload patterns
-- ✅ **Observability**: Comprehensive monitoring and alerting
-- ✅ **Disaster Recovery**: Automated backups with 1-year retention
-- ✅ **Cost Optimization**: Mixed instance types and spot instances where appropriate
+### Positive Outcomes
+- **Scalability**: Automatic scaling based on demand
+- **Reliability**: High availability with disaster recovery
+- **Security**: Enterprise-grade security and compliance
+- **Cost Efficiency**: Optimized resource utilization
+- **Operational Excellence**: Automated operations and monitoring
 
-### Negative
-- ❌ **Complexity**: Multi-service architecture requires expertise
-- ❌ **Cost**: Premium for banking-grade infrastructure and compliance
-- ❌ **Vendor Lock-in**: AWS-specific services and configurations
+### Trade-offs
+- **Complexity**: Increased operational complexity
+- **Learning Curve**: Team training on AWS and Kubernetes
+- **Vendor Dependency**: AWS-specific services
+- **Initial Cost**: Higher upfront infrastructure investment
 
-### Risks Mitigated
-- ✅ **Data Loss**: Automated backups and Multi-AZ deployments
-- ✅ **Security Breaches**: Comprehensive security controls and encryption
-- ✅ **Service Outages**: High availability and disaster recovery
-- ✅ **Compliance Violations**: Banking-specific security and audit controls
-- ✅ **Cost Overruns**: Cost monitoring and anomaly detection
-
-## Performance Characteristics
-
-### Expected Performance
-- **EKS API**: 99.95% availability SLA
-- **RDS**: Multi-AZ with automatic failover < 60 seconds
-- **ElastiCache**: Sub-millisecond latency for session data
-- **ALB**: Auto-scaling to handle traffic spikes
-
-### Capacity Planning
-- **Peak Load**: 10,000+ concurrent banking transactions
-- **Database**: 500GB initial storage with auto-scaling to 1TB
-- **Cache**: 16GB Redis cluster with cluster mode
-- **Compute**: 3-10 nodes auto-scaling based on demand
+### Mitigation Strategies
+- **Training Programs**: Comprehensive team training
+- **Documentation**: Detailed operational procedures
+- **Automation**: Reduce manual operations
+- **Monitoring**: Comprehensive observability stack
 
 ## Related ADRs
-- ADR-007: Docker Multi-Stage Architecture (Container infrastructure)
-- ADR-008: Kubernetes Production Deployment (EKS integration)
-- ADR-011: Monitoring & Observability (CloudWatch integration)
-- ADR-012: Security Architecture (AWS security services)
+- ADR-010: Active-Active Architecture
+- ADR-007: Docker Multi-Stage Architecture
+- ADR-011: Multi-Entity Banking Architecture
 
-## Implementation Timeline
-- **Phase 1**: Core VPC and networking ✅ Completed
-- **Phase 2**: EKS cluster deployment ✅ Completed
-- **Phase 3**: Database and cache infrastructure ✅ Completed
-- **Phase 4**: Security and compliance controls ✅ Completed
-- **Phase 5**: Monitoring and observability ✅ Completed
-
-## Approval
-- **Architecture Team**: Approved
-- **Security Team**: Approved
-- **Banking Compliance**: Approved
-- **Cloud Operations**: Approved
-- **Cost Management**: Approved
-
----
-*This ADR documents the AWS EKS infrastructure design for enterprise banking operations, ensuring security, compliance, scalability, and operational excellence in the cloud.*
+## References
+- [AWS EKS Best Practices](https://aws.github.io/aws-eks-best-practices/)
+- [Kubernetes Security Best Practices](https://kubernetes.io/docs/concepts/security/)
+- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
+- [PCI DSS Requirements](https://www.pcisecuritystandards.org/)
+- [FAPI Security Profile](https://openid.net/specs/fapi-2_0-security-profile.html)
