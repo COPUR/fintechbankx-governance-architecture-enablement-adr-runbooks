@@ -21,3 +21,4 @@
 - Build artifacts and local machine files are excluded by policy.
 - 2026-10-07: ADRs from `docs/adr` and `docs/architecture/adr` were consolidated into `docs/architecture/decisions` with unique numbers (see its README). A re-sync must map those source folders into `docs/architecture/decisions` and keep the renumbering, or `scripts/ci/check-adr-numbers.sh` will fail.
 
+- 2026-10-08: the monolith's `docs/architecture/decisions/ADR-015-open-finance-bounded-context-eventing-deployment.md` is imported as `ADR-017-open-finance-bounded-context-eventing-deployment.md` (see the renumbering map in `docs/architecture/decisions/README.md`). A re-sync must not copy it back as ADR-015.
