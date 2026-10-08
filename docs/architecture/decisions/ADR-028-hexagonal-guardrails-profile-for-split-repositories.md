@@ -33,7 +33,7 @@ A scan of each service repository's newest branch on 2026-10-08 also found break
    - Inbound adapters depend on `domain.port.in`, not on application implementations.
    - `domain.port.out` implementations live in infrastructure.
 
-   One root per repository (decision 1) is review-only today: the shared gate treats every package prefix with a `.domain` sub-package as a root, so a second root passes the four rules. Platform is asked to pin the root per repository in the gate; until then reviewers check it, and no class may sit in another context's aggregate package.
+   One root per repository (decision 1) is a fifth rule. The shared gate enforces it when the repository sets the gate's `package-root` input (cicd-templates PR #11, 03b36e2); every service repository sets it when it adopts the shared workflow. Without the input the gate treats every package prefix with a `.domain` sub-package as a root, so a second root would pass the four rules. No class may sit in another context's aggregate package.
 4. **Data:**
    - The store engine is chosen per service and stays private to it (ADR-021).
    - A system-of-record store has versioned migrations (Flyway, or a versioned change log such as Mongock for MongoDB) and backups.
