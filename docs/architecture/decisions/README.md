@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-025). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
+All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-028). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
 
 | ADR | Decision |
 |---|---|
@@ -28,6 +28,9 @@ All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-num
 | [ADR-022](ADR-022-contract-catalogs-ownership.md) | Contract Catalogs Ownership (Proposed) |
 | [ADR-023](ADR-023-kubernetes-namespace-per-bounded-context.md) | Kubernetes Namespace per Bounded Context with Mesh Default-Deny and IRSA (Proposed) |
 | [ADR-024](ADR-024-kafka-runtime-msk-iam-and-producer-defaults.md) | Kafka Runtime: Amazon MSK with IAM Auth and Producer Defaults (Proposed) |
+| [ADR-025](ADR-025-resource-server-token-validation.md) | Resource-Server Token Validation: Issuer, Audience, DPoP (Proposed) |
+| [ADR-026](ADR-026-incremental-backfill-before-cutover.md) | Incremental (Upsert) Backfill Until Cut-Over (Proposed) |
+| [ADR-027](ADR-027-ci-runs-check-with-coverage-gate.md) | CI Runs `check` So Quality Gates Are Enforced (Proposed) |
 
 ## Superseded texts
 
