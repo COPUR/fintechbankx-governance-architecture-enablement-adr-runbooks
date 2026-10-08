@@ -26,7 +26,7 @@ State the slice (one aggregate or one use-case family), what moves, what stays i
 6. Dashboards and alerts for the new service exist (latency, error rate, consumer lag, outbox relay lag; outbox gauge `outbox_pending_events`, a proposed metric name).
 7. Rollback tags created in the monolith and target repositories.
 8. Change approved by the owning squad and, for High risk, the Architecture Board.
-9. Regression parity (ADR-029): for every alignment-matrix row of the slice, the latest parity run against the release candidate shows 0 regressions, and each intentional difference is accepted with a decision reference (scenario id plus decision). Record the run id (the matrix `parity` label, `<run>-<sha7>`).
+9. Regression parity (ADR-029): for every alignment-matrix row of the slice, the latest parity run against the release candidate shows 0 regressions, and each intentional difference is accepted with a decision reference (scenario id plus decision). The run must be a `full` run (responses and domain events compared) made with `PARITY_CUTOVER=true`, which fails on any accepted difference whose rule is not approved; a `response-only` run does not satisfy this precondition. Record the run id (the matrix `parity` label, `<run>-<sha7>`).
 10. Upstream dependencies: every API or event the slice consumes has an owning repository, or the matrix row records an interim source (the monolith behind an anti-corruption adapter, or a non-production stub) per the service guardrails section 4.
 
 ## 3. Change Plan
