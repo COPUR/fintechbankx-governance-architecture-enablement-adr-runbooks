@@ -31,17 +31,20 @@ One namespace per bounded context, plus platform namespaces:
 | `observability` | OTel collector, Prometheus, Grafana, Tempo, Loki, Alertmanager |
 | `istio-system`, `istio-ingress`, `external-secrets` | Platform |
 
-Service-account names not listed above are set by the owning squad as `<capability>-service` and recorded in the repository README and the alignment matrix (ADR-018). Every namespace carries `istio-injection=enabled` (except `istio-system`) and `fintechbankx.io/context=<ctx>`. In-cluster service DNS is `<sa>.<ns>.svc.cluster.local:8080`.
+Service-account names not listed above are set by the owning squad as `<capability>-service` and recorded in the repository README and the alignment matrix (ADR-018). Mesh-injected namespaces (label `istio-injection=enabled`) are `lending`, `payments`, `customer`, `risk`, `compliance`, `open-finance`, `identity` and `observability`; `istio-system`, `kube-system`, `external-secrets` and `kafka` (Strimzi manages its own TLS) are not injected (platform contract addendum, 2026-10-08). Every context namespace carries `fintechbankx.io/context=<ctx>`. In-cluster service DNS is `<sa>.<ns>.svc.cluster.local:8080`.
 
 ### 2. Workload conventions
 
 - Ports: `8080` for the API, `8081` for management (`/actuator/health/liveness`, `/actuator/health/readiness`, `/actuator/prometheus`). Only `8080` is exposed to other workloads.
-- Pod labels: `app.kubernetes.io/name=<sa>`, `app.kubernetes.io/part-of=fintechbankx-<ctx>`, `fintechbankx.io/service-id=svc-<ctx>-<cap>`.
+- A service chart installs into its context namespace with service account name = the SA above.
+- Pod labels: `app.kubernetes.io/name=<sa>`, `app=<sa>`, `version=<semver or sha>`, `app.kubernetes.io/part-of=fintechbankx-<ctx>`, `fintechbankx.io/service-id=<service id>`, and annotation/label `sidecar.istio.io/inject: "true"`.
+- Service ports are named `http` (8080) and `http-management` (8081) so Istio detects the protocol. `traffic.sidecar.istio.io/excludeInboundPorts` is not allowed; probes go through Istio's probe rewrite.
+- Secrets come only from the External Secrets Operator `ClusterSecretStore` named `aws-secrets-manager` (namespace `external-secrets`, IRSA role from the terraform-modules `external-secrets-irsa` module, readable scope `<env>/*` secrets and KMS keys tagged `fintechbankx.io/secrets=true`; manifest in the mesh repo). Any other store name, such as `platform-secrets`, is invalid.
 - Traces go over OTLP to `otel-collector.observability.svc.cluster.local` (`4317` gRPC, `4318` HTTP).
 
 ### 3. Mesh: default deny, allow-list by SPIFFE principal
 
-- Mesh-wide `PeerAuthentication` STRICT mTLS.
+- Mesh-wide `PeerAuthentication` named `default` in `istio-system`, mode STRICT. No service ships a `PeerAuthentication` or `DestinationRule` that weakens it.
 - Each namespace has a default-deny `AuthorizationPolicy`. Each service adds an ALLOW policy listing exactly the caller principals it accepts, in the form `cluster.local/ns/<ns>/sa/<sa>` (for example payments allowing `cluster.local/ns/lending/sa/loan-lifecycle-service` for disbursement). Principal wildcards across namespaces are not allowed.
 - `RequestAuthentication` against the Keycloak `fintechbankx` realm JWKS at the ingress gateway and in every service namespace (ADR-020).
 - An allow-list entry is part of the consumer change: the consumer squad asks, the provider squad approves in its own repository.
