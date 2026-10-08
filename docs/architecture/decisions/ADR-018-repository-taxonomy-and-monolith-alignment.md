@@ -77,7 +77,7 @@ Every repository has exactly one owning squad, recorded in its `README.md` owner
 
 ### 5. Alignment matrix as source of truth
 
-`docs/alignment/MONOLITH_TO_REPO_ALIGNMENT_MATRIX.md` in `fintechbankx-governance-architecture-enablement-enterprise-architecture` is the single source of truth for which monolith path maps to which repository, what has been extracted, and what remains. Each repository's `MIGRATION_GRANULARITY.md` must agree with it; where they disagree, the matrix wins and the repository file is corrected. At the time of writing that file does not exist on the enterprise-architecture `main` branch; creating it is part of adopting this ADR.
+`docs/alignment/MONOLITH_TO_REPO_ALIGNMENT_MATRIX.md` in `fintechbankx-governance-architecture-enablement-enterprise-architecture` is the single source of truth for which monolith path maps to which repository, what has been extracted, and what remains. Each repository's `MIGRATION_GRANULARITY.md` must agree with it; where they disagree, the matrix wins and the repository file is corrected. It is introduced by enterprise-architecture PR #15 (draft, 2026-10-08) together with a CI check that fails when a monolith folder, Gradle module or root migration has no row.
 
 ### 6. Proposed new repositories for unhomed capabilities
 
