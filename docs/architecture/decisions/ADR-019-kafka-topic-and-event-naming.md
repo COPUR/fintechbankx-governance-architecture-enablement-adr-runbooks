@@ -53,6 +53,8 @@ Events are published from the transactional outbox (ADR-021), never by a direct 
 
 Additive, optional fields are non-breaking and stay on the same topic. A breaking change creates a new major topic (`.v2`); the producer dual-publishes to `.v1` and `.v2` until every consumer has moved. The source of truth for consumers is the AsyncAPI catalog: each consuming service declares a `receive` operation on the topic in its own spec and lists the topic under `consumes` in `catalog/index.json`, and `check-asyncapi-catalog.mjs` cross-checks the two, then retires `.v1` with an announced end date.
 
+Each producer repository gates its own AsyncAPI file in its required `ci/test` check, so a breaking change fails where it is made rather than when it is mirrored: `asyncapi validate` on the spec and the catalog's breaking check (`asyncapi-breaking.mjs` with its rules, compared with `origin/main`) run on every PR. Versions count from the first time a spec lands on the catalog's `main`; before that a spec is pre-release and stays `1.0.0` (asyncapi-catalog README, "Change rules"). The shared CI template carries the step; until it does, providers copy the catalog's script unchanged.
+
 ### 6. Legacy topics
 
 Monolith-style topics (`customer.events`, `loan.created`, ...) are created only when `CREATE_LEGACY_TOPICS=true` is set for the topic provisioning script, default false. They exist only to serve monolith consumers during strangler cut-over and are deleted with the monolith code that uses them. This is not implemented yet: `scripts/kafka/create-topics.sh` on `fintechbankx-platform-event-streaming-kafka` `main` creates them unconditionally.
