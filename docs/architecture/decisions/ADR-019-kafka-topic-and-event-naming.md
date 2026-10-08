@@ -51,7 +51,7 @@ Events are published from the transactional outbox (ADR-021), never by a direct 
 
 ### 5. Versioning and breaking changes
 
-Additive, optional fields are non-breaking and stay on the same topic. A breaking change creates a new major topic (`.v2`); the producer dual-publishes to `.v1` and `.v2` until every consumer listed in the AsyncAPI catalog has moved, then retires `.v1` with an announced end date.
+Additive, optional fields are non-breaking and stay on the same topic. A breaking change creates a new major topic (`.v2`); the producer dual-publishes to `.v1` and `.v2` until every consumer has moved. The source of truth for consumers is the AsyncAPI catalog: each consuming service declares a `receive` operation on the topic in its own spec and lists the topic under `consumes` in `catalog/index.json`, and `check-asyncapi-catalog.mjs` cross-checks the two, then retires `.v1` with an announced end date.
 
 ### 6. Legacy topics
 

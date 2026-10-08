@@ -13,7 +13,7 @@ Proposed
 The monolith's `docs/HEXAGONAL_ARCHITECTURE_GUARDRAILS.md` (ADR-001 DDD, ADR-002 hexagonal) prescribes a package layout under the root `com.bank.loanmanagement.<bounded-context>`, with `domain/port/in|out` and `infrastructure/adapter/in|out`. None of the split fintechbankx repositories uses that root. The cores use `com.bank.<context>` and the open-finance and payment-capability services use `com.enterprise.openfinance.<capability>`. Four service pillars are about to make layout passes, and each needs the same answer: is one root required, and which parts of the layout are mandatory?
 
 A scan of each service repository's newest branch on 2026-10-08 also found breaks that the layout question does not cover:
-- Loan, payment and customer services have no use-case interfaces.
+- Loan and payment initiation-settlement services have no use-case interfaces (customer added them in its PR #13).
 - Three payment-capability repos carry a domain class that imports Spring.
 - The consent service's application layer imports infrastructure, and it holds consents in memory.
 - Eight repositories have no ArchUnit tests.
@@ -27,11 +27,13 @@ A scan of each service repository's newest branch on 2026-10-08 also found break
    - `infrastructure.<technology>` (web|rest, persistence, outbox, messaging, external, security, config)
 
    The monolith's `infrastructure.adapter.in|out` nesting is not required.
-3. **Four ArchUnit rules run on `check`** in every service repository. They are also enforced centrally by the shared `java-service-ci.yml` workflow in `fintechbankx-platform-delivery-iac-cicd-templates` (its ArchUnit gate, `tools/archunit-gate`). That gate runs the four rules on the compiled classes, whatever the repository's own tests say:
+3. **Four ArchUnit rules run on `check`** in every service repository. Once `fintechbankx-platform-delivery-iac-cicd-templates` PR #11 merges, they are also enforced centrally by the shared `java-service-ci.yml` workflow in `fintechbankx-platform-delivery-iac-cicd-templates` (its ArchUnit gate, `tools/archunit-gate`). That gate runs the four rules on the compiled classes, whatever the repository's own tests say:
    - The domain depends on no application, infrastructure, Spring, JPA, Kafka or Mongo packages.
    - The application layer depends on no infrastructure package.
    - Inbound adapters depend on `domain.port.in`, not on application implementations.
    - `domain.port.out` implementations live in infrastructure.
+
+   One root per repository (decision 1) is review-only today: the shared gate treats every package prefix with a `.domain` sub-package as a root, so a second root passes the four rules. Platform is asked to pin the root per repository in the gate; until then reviewers check it, and no class may sit in another context's aggregate package.
 4. **Data:**
    - The store engine is chosen per service and stays private to it (ADR-021).
    - A system-of-record store has versioned migrations (Flyway, or a versioned change log such as Mongock for MongoDB) and backups.
@@ -54,7 +56,7 @@ A scan of each service repository's newest branch on 2026-10-08 also found break
 ## Consequences
 
 - Each service pillar's layout pass makes these changes:
-  - It adds `domain.port.in` use-case interfaces where they are missing (loan, payment initiation-settlement, customer).
+  - It adds `domain.port.in` use-case interfaces where they are missing (loan, payment initiation-settlement).
   - It removes the Spring-annotated `DistributedConsentService` from the recurring-mandates, bulk and request-to-pay domains.
   - It moves the consent service's PKCE settings and OAuth error type out of infrastructure.
   - It gives consent a persistent store.

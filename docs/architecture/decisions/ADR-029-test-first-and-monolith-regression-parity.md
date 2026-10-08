@@ -24,7 +24,7 @@ Nothing yet states the following, and coverage alone does not prove them:
 ### 1. Test-first (TDD) fitness functions
 
 1. **Red before green.** A pull request that changes behaviour in `src/main` adds or changes a test that fails on the base branch and passes on the head. The PR description names that test and shows the failing run on the base. Reviewers, the `quality-engineer` role agent included, reject behaviour changes without it.
-2. **Tests travel with code.** A pull request that changes `src/main/` without changing `src/test/` fails. Label `no-behaviour-change` opts out; reviewers check that the label is true for refactors, renames and generated code. The shared workflow `.github/workflows/tdd-gate.yml` in `fintechbankx-platform-delivery-iac-cicd-templates` implements this (logic and tests in `scripts/ci/tdd-gate.mjs`). Every service repository calls it on `pull_request` with the `labeled` and `unlabeled` events.
+2. **Tests travel with code.** A pull request that changes `src/main/` without changing `src/test/` fails. Label `no-behaviour-change` opts out; reviewers check that the label is true for refactors, renames and generated code. The shared workflow `.github/workflows/tdd-gate.yml` in `fintechbankx-platform-delivery-iac-cicd-templates` implements this (pending that repository's PR #11; until it merges, repositories run the same check with a local job) (logic and tests in `scripts/ci/tdd-gate.mjs`). Every service repository calls it on `pull_request` with the `labeled` and `unlabeled` events.
 3. **Test layers** are ordered as in the `fbx-hexagonal-service` skill: domain unit tests first, then application tests with in-memory ports, then adapter tests (web slice, Testcontainers), then contract tests against the catalogued OpenAPI and AsyncAPI contracts.
 4. **Gates on `check`:**
    - coverage (ADR-027)
@@ -44,7 +44,7 @@ Nothing yet states the following, and coverage alone does not prove them:
 4. **Accepted differences are listed, not hidden.**
    - An intended change is recorded with the scenario id, the difference and the decision that allows it. Examples: customer `email` optional, an explicit currency where the monolith defaulted to USD.
    - Any other difference fails the run.
-5. **Cut-over gate.** A matrix row moves to `filled` (merged with green gates) as before. A capability is not cut over from the monolith until its scenarios pass parity or every difference is accepted (ADR-026, `RUNBOOK-EXTRACT-service-cutover.md`).
+5. **Cut-over gate.** A matrix row moves to `filled` (merged with green gates) as before. A capability is not cut over from the monolith until its scenarios pass parity or every difference is accepted (ADR-026). `RUNBOOK-EXTRACT-service-cutover.md` makes this a precondition (0 regressions on every matrix row of the slice, accepted differences referenced, run id recorded) and an acceptance-checklist item. The matrix `parity` label names the run and the tested revision (`<run>-<sha7>`).
 6. **Ownership:**
    - The "Regression tests against the monolith" workstream owns the harness and the scenario catalog, and chooses where they live.
    - Service pillars own the scenarios for their rows and fix parity failures in their repositories.

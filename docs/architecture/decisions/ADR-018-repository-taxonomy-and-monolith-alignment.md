@@ -77,21 +77,25 @@ Every repository has exactly one owning squad, recorded in its `README.md` owner
 
 ### 5. Alignment matrix as source of truth
 
-`docs/alignment/MONOLITH_TO_REPO_ALIGNMENT_MATRIX.md` in `fintechbankx-governance-architecture-enablement-enterprise-architecture` is the single source of truth for which monolith path maps to which repository, what has been extracted, and what remains. Each repository's `MIGRATION_GRANULARITY.md` must agree with it; where they disagree, the matrix wins and the repository file is corrected. It is introduced by enterprise-architecture PR #15 (draft, 2026-10-08) together with a CI check that fails when a monolith folder, Gradle module or root migration has no row.
+`docs/alignment/MONOLITH_TO_REPO_ALIGNMENT_MATRIX.md` in `fintechbankx-governance-architecture-enablement-enterprise-architecture` is the single source of truth for which monolith path maps to which repository, what has been extracted, and what remains. Each repository's `MIGRATION_GRANULARITY.md` must agree with it; where they disagree, the matrix wins and the repository file is corrected. It is introduced by enterprise-architecture PR #15 (draft, 2026-10-08). Its CI check (`npm test`) fails when the CSV is malformed, a status or row id is invalid, a parity entry is malformed, one of the 26 repositories has no row, or the rendered Markdown is stale. The coverage check against a monolith checkout (`--coverage <checkout>`: every top-level folder, Gradle module, root migration and contract file under `api/` and `contracts/` has a row) is run by hand when the matrix changes; it is not in CI, because CI has no monolith checkout.
 
 ### 6. Proposed new repositories for unhomed capabilities
 
-These monolith capabilities have no target repository. Each is a **proposal**: it needs Board approval of the context code, an owning squad, a manifest row and its own ADR before any repository is created. Names and codes are suggestions.
+These monolith capabilities have no target repository. Each is a **proposal**: it needs Board approval of the context code, an owning squad, a manifest row and its own ADR before any repository is created. **The alignment matrix is the single list:** the rows below are keyed by matrix row id, the proposed names are the matrix `target_repo` values, and where this table and the matrix disagree the matrix wins and this table is corrected. Context codes, squads and waves are suggestions.
 
-| Monolith source | Proposed actual name | Proposed context code | Notes |
-|---|---|---|---|
-| `bank-wide-services`, `bankwide` (core-banking accounts and ledger, today README placeholders) | `fintechbankx-corebanking-accounts-ledger-core` | `cbk` (new) | New pillar `corebanking`. Ledger is the system of record for balances; loan and payments post to it by API or event. |
-| `amanahfi-platform/*` (onboarding, accounts, payments, murabaha, compliance, risk, gateway, event-streaming; own shared kernel) | `fintechbankx-islamicfinance-amanahfi-core` | `isf` (new) | New pillar `islamicfinance`. Whether amanahfi becomes one repository or one per sub-context is an open question. |
-| `masrufi-framework` (Islamic finance extension: murabaha, musharakah, ijarah) | `fintechbankx-islamicfinance-masrufi-extension` | `isf` | Overlaps amanahfi `murabaha-context`; the Board must decide whether to merge it into the amanahfi repository first. |
-| `open-finance-context` package `corporatetreasury` | `fintechbankx-openfinance-corporate-data-corporate-treasury` | `of` | Same tribe as corporate financial data. |
-| `open-finance-context` package `fxservices` | `fintechbankx-openfinance-fx-remittance-fx-services` | `of` | |
-| `open-finance-context` packages `insurancedata`, `insurancequotes` | `fintechbankx-openfinance-insurance-data-quotes` | `of` | |
-| `open-finance-context` package `dynamiconboarding` | `fintechbankx-openfinance-onboarding-dynamic-onboarding` | `of` | PII stays with the customer context; this service holds onboarding session state only. |
+| Matrix row | Monolith source | Proposed actual name | Context code | Owning squad (proposed) | Wave | Notes |
+|---|---|---|---|---|---|---|
+| UN-04 | `bank-wide-services`, `bankwide` (core-banking accounts and ledger, today README placeholders) | `fintechbankx-corebanking-accounts-ledger-service` | `cbk` (new) | Core Banking Ledger Squad | 1 | New pillar `corebanking`. System of record for accounts and balances; payments (LP-05) and the open-finance account read models (OF-02, OF-03, OF-05) depend on it. Highest priority. |
+| UN-02 | `amanahfi-platform/*` (onboarding, accounts, payments, murabaha, compliance, risk, gateway, event-streaming; own shared kernel) | `fintechbankx-islamicfinance-amanahfi-platform` | `isf` (new) | Islamic Finance Squad | 3 | New pillar `islamicfinance`. Starts as one repository only as a lift of the existing module structure, with an end condition: each sub-context that gets its own squad, its own release cadence or a second consumer moves to its own repository, and no new sub-context is added to the shared one. |
+| UN-03 | `masrufi-framework` (murabaha, musharakah, ijarah) | `fintechbankx-islamicfinance-masrufi-framework` | `isf` | Islamic Finance Squad | 3 | Overlaps amanahfi `murabaha-context`; the Board decides whether it merges into UN-02 first. |
+| UN-08 | `src/main/java/com/loanmanagement/analytics` (dashboards, risk analytics) | `fintechbankx-analytics-reporting-service` | `anl` (new) | Data and Analytics Squad | 2 | Event-fed read model replacing cross-table reads of customer, loan and risk data. |
+| OF-08 | `open-finance-context` package `corporatetreasury` | `fintechbankx-openfinance-corporate-treasury-service` | `of` | Corporate Financial Data Squad | 3 | |
+| OF-09 | `open-finance-context` package `fxservices` | `fintechbankx-openfinance-fx-remittance-service` | `of` | Payments Experience Squad | 3 | |
+| OF-10 | `open-finance-context` package `insurancedata` | `fintechbankx-openfinance-insurance-policy-data-service` | `of` | Open Insurance Squad | 3 | |
+| OF-11 | `open-finance-context` package `insurancequotes` | `fintechbankx-openfinance-insurance-quote-service` | `of` | Open Insurance Squad | 3 | |
+| OF-12 | `open-finance-context` package `dynamiconboarding` | `fintechbankx-openfinance-dynamic-onboarding-service` | `of` | Consent and Authorization Squad | 3 | PII stays with the customer context; this service holds onboarding session state only. |
+
+New repositories use the package root `com.fintechbankx.<context>.<capability>` with the context code above (for example `com.fintechbankx.cbk.accounts`), per ADR-028.
 
 `common/*`, `shared-infrastructure` and `integration-context/kafka-connect-open-finance-smt` are not new runtime repositories: shared code is vendored per service or published as a library; the SMT belongs with `fintechbankx-platform-event-streaming-kafka` (to be confirmed by the Event Platform Squad).
 
