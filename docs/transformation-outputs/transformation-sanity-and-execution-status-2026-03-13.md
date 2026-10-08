@@ -4,8 +4,8 @@
 
 Validation and execution status for the repository-bootstrap transformation workspace:
 
-- Workspace: `/Users/alicopur/Documents/GitHub/enterprise-loan-management-system/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13`
-- Manifest: `/Users/alicopur/Documents/GitHub/enterprise-loan-management-system/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/repository-bootstrap-manifest.csv`
+- Workspace: `<monolith-root>/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13`
+- Manifest: `<monolith-root>/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/repository-bootstrap-manifest.csv`
 
 ## Sanity Checks
 
@@ -40,10 +40,10 @@ Outcome:
 
 Existing command-pack logs:
 
-- `/Users/alicopur/Documents/GitHub/enterprise-loan-management-system/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-wave-execution-20260313T093335Z.log`
-- `/Users/alicopur/Documents/GitHub/enterprise-loan-management-system/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-wave-create-harden-20260313T093556Z.log`
-- `/Users/alicopur/Documents/GitHub/enterprise-loan-management-system/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-prefixed-harden-20260313T094154Z.log`
-- `/Users/alicopur/Documents/GitHub/enterprise-loan-management-system/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-prefixed-seed-20260313T094310Z.log`
+- `<monolith-root>/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-wave-execution-20260313T093335Z.log`
+- `<monolith-root>/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-wave-create-harden-20260313T093556Z.log`
+- `<monolith-root>/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-prefixed-harden-20260313T094154Z.log`
+- `<monolith-root>/docs/enterprisearchitecture/implementation-development/transformation/workspace-ddd-eda-2026-03-13/bootstrap/command-pack/generated/logs/github-prefixed-seed-20260313T094310Z.log`
 
 ## Remaining Actions
 

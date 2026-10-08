@@ -36,7 +36,7 @@ Define an enforceable, enterprise-grade baseline for anonymity protection, secre
   - `.github/workflows/ci.yml` (`anonymity-security-baseline` job)
 
 ## Verification Checklist
-- [ ] No `/Users/...`, `C:\Users\...`, or `/home/<user>/...` in tracked files.
+- [ ] No macOS, Linux or Windows user home-directory paths in tracked files (use `<repo-root>/...` or `$HOME/...`).
 - [ ] No personal identifiers (individual names/usernames) in docs and source.
 - [ ] No private key/token signature patterns committed.
 - [ ] Secret-bearing scripts read from `*_FILE` or environment injection only.
