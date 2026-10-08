@@ -29,6 +29,10 @@ The monolith keeps customer, loan and payment tables in one database, with Flywa
 - **Dual write from the application to old and new stores.** Rejected: no atomicity; use outbox or backfill with verification.
 - **Change data capture from the monolith as the long-term integration.** Allowed only as a temporary migration aid behind an anti-corruption layer, not as a permanent contract.
 
+## Known deviations
+
+- The open-finance personal-financial-data, business-financial-data and banking-metadata services keep DocumentDB plus Redis read models instead of an Aurora PostgreSQL schema. Each records that choice in an ADR in its own repository. The ownership rules above still apply: one owner per data set, no reads of another service's store, data in by API or event.
+
 ## Consequences
 
 - Reporting and joins across contexts move to event-fed read models or an analytics platform.

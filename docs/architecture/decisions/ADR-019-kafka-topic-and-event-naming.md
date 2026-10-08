@@ -24,7 +24,7 @@ Topics in the estate follow at least two schemes. The naming standard (enterpris
 
 ### 2. Consumer groups
 
-`cg.<service-id>.<purpose>.v<major>`, for example `cg.svc-cmp-evidence.payment-compliance-check.v1`. One group per consuming purpose; a group is never shared between services.
+`cg.<service-id>.<purpose>.v<major>`, for example `cg.svc-cmp-evidence.payment-compliance-check.v1`. One group per consuming purpose; a group is never shared between services. Client settings that go with these names (group ids, the `outbox_pending_events` gauge, the W3C `traceparent` header carried through the broker, DLQ headers) are in `docs/guides/SERVICE_CLIENT_CONFIGURATION.md` of `fintechbankx-platform-event-streaming-kafka`.
 
 ### 3. Record key
 
