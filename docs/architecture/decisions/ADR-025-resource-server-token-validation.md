@@ -19,9 +19,24 @@ Every fintechbankx service that exposes an API validates each bearer token as fo
 1. **Signature and issuer.** Signature against the realm JWKS (`<issuer>/protocol/openid-connect/certs`), `iss` equal to `https://<identity-host>/realms/fintechbankx`.
 2. **Audience.** `aud` must contain the service's own service id (for example `svc-ln-loan-lifecycle`). Tokens without it are rejected with 401.
 3. **Lifetime.** `exp` and `nbf` checked with at most 60 seconds of clock skew.
-4. **DPoP for open-finance clients.** Consent-auth and the `svc-of-*` services serve third-party providers under the FAPI 2.0 profile: their tokens are sender-constrained (DPoP, or mTLS-bound), and a token with a `cnf.jkt` claim must arrive with a valid `DPoP` proof header (RFC 9449): signature with the bound key, `htm` and `htu` matching the request, `iat` within the allowed window, `ath` matching the access token hash, and `jti` not replayed (replay cache shared across replicas). First-party web and mobile clients are not required to use DPoP for now (Proposed: enable for mobile later). Internal service-to-service calls follow ADR-020: client-credentials tokens over STRICT mTLS, no DPoP.
+4. **DPoP by caller, not by namespace.** Every endpoint that a third-party provider (TPP) calls requires a sender-constrained token (DPoP, or an mTLS-bound token) under the FAPI 2.0 profile, whichever service or namespace serves it. That covers consent-auth and the `svc-of-*` services, and also the TPP-facing payment endpoints:
+   - payment initiation
+   - bulk orchestration (`/open-finance/v1/file-payments`)
+   - recurring mandates (`/open-finance/v1/vrp`)
+   - request-to-pay when a TPP calls it
+
+   On these paths:
+   - The request carries `Authorization: DPoP <token>` and a valid `DPoP` proof (RFC 9449): signed with the bound key, `htm` and `htu` matching the request, `iat` within the allowed window, `ath` matching the access token hash, and `jti` not replayed (replay cache shared across replicas).
+   - `cnf.jkt` equals the proof key's thumbprint.
+   - A plain Bearer token is rejected with 401 and `WWW-Authenticate: DPoP`.
+
+   Not covered:
+   - Internal service-to-service calls with client-credentials tokens follow ADR-020: Bearer over STRICT mTLS, no DPoP. An example is bulk orchestration calling consent-auth.
+   - First-party web and mobile calls stay Bearer for now (Proposed: enable for mobile later).
+
+   A service with both kinds of caller keeps them on separate path prefixes and enforces DPoP per prefix: TPP-facing under `/open-finance/v1/...`, first-party and internal under `/api/v1/...` (platform contract, "DPoP applies by caller, not by namespace", 2026-10-08).
 5. **Authorities.** Realm roles map to `ROLE_<ROLE>`; operation scopes are checked in addition to roles. Resource ownership (a customer may only act on their own customer and account ids) is enforced in the application layer, not inferred from the token alone.
-6. **Tests.** Each service has tests that prove a token with the wrong audience and an expired token are rejected; open-finance services also prove a DPoP-bound token without a valid proof is rejected.
+6. **Tests.** Each service has tests that prove a token with the wrong audience and an expired token are rejected; every TPP-facing path (open finance and payments) also proves that a Bearer token, and a DPoP-bound token without a valid proof, are rejected.
 
 ## Alternatives
 
@@ -30,7 +45,8 @@ Every fintechbankx service that exposes an API validates each bearer token as fo
 
 ## Consequences
 
-- Loan, payments, customer, risk and compliance services need a resource-server change and tests before cut-over; the owning pillar threads carry it.
+- Loan, payments, customer, risk and compliance services need a resource-server change and tests before cut-over; the owning pillar threads carry it. Payment initiation, bulk, mandates and request-to-pay also split TPP-facing paths under `/open-finance/v1` and enforce DPoP there.
+- The mesh treats the TPP-facing payment prefixes like open finance: gateway ALLOW by path, with the token checked by the service.
 - Keycloak adds the audience with an Audience protocol mapper on every calling client (service clients, `fintechbankx-web`, `fintechbankx-mobile`, TPP clients) for each service id it may call, as set by the platform contract addendum of 2026-10-08.
 - Reversible only by a later ADR, since loosening it weakens a security control.
 - Related: ADR-004, ADR-006, ADR-020, ADR-023.

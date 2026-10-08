@@ -27,7 +27,7 @@ A scan of each service repository's newest branch on 2026-10-08 also found break
    - `infrastructure.<technology>` (web|rest, persistence, outbox, messaging, external, security, config)
 
    The monolith's `infrastructure.adapter.in|out` nesting is not required.
-3. **Four ArchUnit rules run on `check`** in every service repository:
+3. **Four ArchUnit rules run on `check`** in every service repository. They are also enforced centrally by the shared `java-service-ci.yml` workflow in `fintechbankx-platform-delivery-iac-cicd-templates` (its ArchUnit gate, `tools/archunit-gate`). That gate runs the four rules on the compiled classes, whatever the repository's own tests say:
    - The domain depends on no application, infrastructure, Spring, JPA, Kafka or Mongo packages.
    - The application layer depends on no infrastructure package.
    - Inbound adapters depend on `domain.port.in`, not on application implementations.
@@ -60,4 +60,5 @@ A scan of each service repository's newest branch on 2026-10-08 also found break
   - It gives consent a persistent store.
   - It adds the four ArchUnit rules where they are missing.
 - Repositories whose CI still runs `test` go red on coverage when they move to `check` (ADR-027).
+- Every repository without `domain.port.in` use cases fails the shared ArchUnit gate (rule 3) as soon as it adopts `java-service-ci.yml`. A repository's own ArchUnit test is not proof of conformance when its rule is looser than the shared one. The gate's `archunit-report-only` input is a temporary, visible escape hatch, removed in the same layout pass.
 - Related: ADR-001, ADR-002, ADR-021, ADR-027, ADR-029.

@@ -24,11 +24,11 @@ Nothing yet states the following, and coverage alone does not prove them:
 ### 1. Test-first (TDD) fitness functions
 
 1. **Red before green.** A pull request that changes behaviour in `src/main` adds or changes a test that fails on the base branch and passes on the head. The PR description names that test and shows the failing run on the base. Reviewers, the `quality-engineer` role agent included, reject behaviour changes without it.
-2. **Tests travel with code.** A CI step fails a pull request that changes `src/main/java` without changing `src/test/java`. Label `no-behaviour-change` opts out; reviewers check the label is true for refactors, renames and generated code.
+2. **Tests travel with code.** A pull request that changes `src/main/` without changing `src/test/` fails. Label `no-behaviour-change` opts out; reviewers check that the label is true for refactors, renames and generated code. The shared workflow `.github/workflows/tdd-gate.yml` in `fintechbankx-platform-delivery-iac-cicd-templates` implements this (logic and tests in `scripts/ci/tdd-gate.mjs`). Every service repository calls it on `pull_request` with the `labeled` and `unlabeled` events.
 3. **Test layers** are ordered as in the `fbx-hexagonal-service` skill: domain unit tests first, then application tests with in-memory ports, then adapter tests (web slice, Testcontainers), then contract tests against the catalogued OpenAPI and AsyncAPI contracts.
 4. **Gates on `check`:**
    - coverage (ADR-027)
-   - ArchUnit (ADR-028)
+   - ArchUnit (ADR-028; the repository's own tests plus the shared gate in `java-service-ci.yml`)
    - contract and breaking-change checks (ADR-022)
 
 ### 2. Regression parity with the monolith
