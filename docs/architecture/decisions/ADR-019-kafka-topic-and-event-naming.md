@@ -42,7 +42,7 @@ Every record carries these headers, as UTF-8 text (AsyncAPI catalog `common/even
 | `traceparent` | when tracing | W3C trace context. |
 | `x-fapi-interaction-id` | when the flow started at a FAPI API | The interaction id. |
 
-A consumer reads the `eventType` header first. It handles the types it subscribes to and skips any other type: it commits the offset without processing, never fails and never dead-letters it. A record with no `eventType` header is unroutable: the consumer counts it and logs a warning, commits the offset and does not dead-letter it. A record whose header and envelope `eventType` differ is a poison record and goes to the consumer's DLQ. A new event type on a topic is therefore additive.
+A consumer reads the `eventType` header first. It handles the types it subscribes to and skips any other type: it commits the offset without processing, never fails and never dead-letters it. A new event type on a topic is therefore additive. A record with no `eventType` header is unroutable: the consumer counts it and logs a warning, commits the offset and does not dead-letter it. For a type it handles, a record whose envelope `eventType` differs from the header is a poison record and goes to the consumer's DLQ.
 
 ### 4. Envelope
 
