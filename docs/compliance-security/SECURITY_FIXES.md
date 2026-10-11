@@ -29,7 +29,7 @@ This document outlines the security fixes applied to address critical vulnerabil
 
 **Before:**
 ```yaml
-password: admin
+password: <hard-coded default "admin">
 POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-banking_secure_pass}
 ```
 
