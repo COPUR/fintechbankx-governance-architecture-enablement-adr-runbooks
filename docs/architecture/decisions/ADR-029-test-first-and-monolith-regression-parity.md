@@ -6,7 +6,7 @@ Proposed
 
 ## Date
 
-2026-10-08
+2026-10-08 (revised 2026-10-17: migrated records and report format, round 11)
 
 ## Context
 
@@ -37,6 +37,7 @@ Nothing yet states the following, and coverage alone does not prove them:
 2. **Same input, two systems.**
    - Each scenario runs against the monolith at a pinned `master` commit and against the extracted service, with the same seed data.
    - It calls the same business operation through each system's API. Where a path changed, the scenario holds an explicit path mapping.
+   - **Migrated records.** Where the monolith has no API for a record that was migrated, the monolith side is its legacy rows, read through reviewed SQL projections (`catalog/migrated` in the regression harness). The service side is still read through its own API. Matrix rows LP-02 (loan) and CR-02 (customer) use this path.
 3. **What is compared:**
    - Response status and body after normalisation. Generated ids, timestamps and trace headers are ignored. Money is compared exactly, amount, scale and currency.
    - The resulting state, read back through the API.
@@ -48,6 +49,7 @@ Nothing yet states the following, and coverage alone does not prove them:
 6. **Ownership:**
    - The "Regression tests against the monolith" workstream owns the harness and the scenario catalog, and chooses where they live.
    - Service pillars own the scenarios for their rows and fix parity failures in their repositories.
+7. **Parity report format (round 11).** The run writes `parity-report.json` with three fields that consumers read per row: `scope` is computed from the run, `coverage` is reported for each matrix row, and `notCompared` lists the facets not compared, per row and facet. The earlier single "not compared" line for the whole run is gone. `--cutover` fails for each row and facet that was not compared, and for a scenario that ran 0 steps.
 
 ## Alternatives
 
