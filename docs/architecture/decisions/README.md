@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-030). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
+All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-031). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
 
 | ADR | Decision |
 |---|---|
@@ -33,6 +33,7 @@ All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-num
 | [ADR-027](ADR-027-ci-runs-check-with-coverage-gate.md) | CI Runs `check` So Quality Gates Are Enforced (Proposed) |
 | [ADR-028](ADR-028-hexagonal-guardrails-profile-for-split-repositories.md) | Hexagonal Guardrails Profile for the Split Repositories (Proposed) |
 | [ADR-029](ADR-029-test-first-and-monolith-regression-parity.md) | Test-First Delivery and Regression Parity with the Monolith as Fitness Functions (Proposed) |
+| [ADR-030](ADR-030-homes-for-unhomed-monolith-capabilities.md) | Homes for Unhomed Monolith Capabilities (Proposed) |
 
 ## Superseded texts
 
