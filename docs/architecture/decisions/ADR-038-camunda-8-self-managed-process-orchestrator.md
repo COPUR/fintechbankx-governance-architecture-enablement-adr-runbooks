@@ -30,7 +30,7 @@ Proposed
 
 ## Consequences
 
-- A new platform component (Camunda Helm chart 15.x, [8.10 version matrix](https://helm.camunda.io/camunda-platform/version-matrix/camunda-8.10/)). Its values files live in the `bpo` repository (ADR-047), pinned by chart version and sha256. They pass the platform's render guard: images by digest, and no network, mesh, secret-store or alert resources added by our values.
+- A new platform component (Camunda Helm chart 15.x, [8.10 version matrix](https://helm.camunda.io/camunda-platform/version-matrix/camunda-8.10/)). Its values files live in the `bpo` repository (ADR-047), pinned by chart version and sha256. They pass the platform's render guard: images by digest, and no network, mesh, secret-store or alert resources added by our values. The values name secrets only by reference, from an ExternalSecret created from `<env>/<slug>/...`; no secret value appears inline.
 - A commercial licence and an OpenSearch cluster to run ([supported environments](https://docs.camunda.io/docs/reference/supported-environments/)).
 - The Camunda client cannot run in the Spring Boot 3.3 services, so it stays in `bpo` (ADR-040).
 - The risk of the engine becoming a "god orchestrator" remains. ADR-041 limits what Camunda holds.
