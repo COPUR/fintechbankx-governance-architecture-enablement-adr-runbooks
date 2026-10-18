@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-036). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
+All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-044). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
 
 | ADR | Decision |
 |---|---|
@@ -39,6 +39,14 @@ All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-num
 | [ADR-033](ADR-033-psu-authorises-vrp-and-bulk-payments.md) | The PSU Authorises VRP and Bulk Payments (Proposed) |
 | [ADR-034](ADR-034-request-to-pay-consent-path-and-decider.md) | Request-to-Pay Consent Path and Decider (Proposed) |
 | [ADR-035](ADR-035-consent-validity-cap-365-days.md) | Consent Validity Capped at 365 Days (Proposed) |
+| [ADR-036](ADR-036-core-accounts-stay-in-accounts-ledger.md) | Core Banking Accounts Stay in the Accounts Ledger (Proposed) |
+| [ADR-037](ADR-037-account-holds-owned-by-accounts-ledger.md) | Account Holds Move to the Accounts Ledger (Proposed) |
+| [ADR-038](ADR-038-camunda-8-self-managed-process-orchestrator.md) | Camunda 8.10 Self-Managed as the Process Orchestrator (Proposed) |
+| [ADR-039](ADR-039-one-camunda-cluster-per-jurisdiction.md) | One Camunda Cluster per Jurisdiction, No Tenants (Proposed) |
+| [ADR-040](ADR-040-bpo-service-owns-camunda-workers.md) | Camunda Workers and Process API in a Separate `bpo` Service (Proposed) |
+| [ADR-041](ADR-041-camunda-holds-no-money-rules-or-personal-data.md) | Camunda Holds No Money, Rules or Personal Data (Proposed) |
+| [ADR-042](ADR-042-first-orchestrated-flows-tpp-account-opening-then-instant-exception.md) | First Orchestrated Flows: TPP Account Opening, Then the Instant-Payment Exception (Proposed) |
+| [ADR-043](ADR-043-one-payment-scheme-gateway-per-rail-family.md) | One Payment-Scheme Gateway per Rail Family (Proposed) |
 
 ## Superseded texts
 
