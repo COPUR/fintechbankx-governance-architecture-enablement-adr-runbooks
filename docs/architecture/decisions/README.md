@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-031). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
+All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-036). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
 
 | ADR | Decision |
 |---|---|
@@ -34,6 +34,11 @@ All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-num
 | [ADR-028](ADR-028-hexagonal-guardrails-profile-for-split-repositories.md) | Hexagonal Guardrails Profile for the Split Repositories (Proposed) |
 | [ADR-029](ADR-029-test-first-and-monolith-regression-parity.md) | Test-First Delivery and Regression Parity with the Monolith as Fitness Functions (Proposed) |
 | [ADR-030](ADR-030-homes-for-unhomed-monolith-capabilities.md) | Homes for Unhomed Monolith Capabilities (Proposed) |
+| [ADR-031](ADR-031-credit-score-on-events-and-loan-eligibility.md) | Credit Score on Events and Loan Eligibility Ownership (Proposed) |
+| [ADR-032](ADR-032-compliance-reason-codes-and-screening-facts.md) | Compliance Reason Codes and Screening Facts (Proposed) |
+| [ADR-033](ADR-033-psu-authorises-vrp-and-bulk-payments.md) | The PSU Authorises VRP and Bulk Payments (Proposed) |
+| [ADR-034](ADR-034-request-to-pay-consent-path-and-decider.md) | Request-to-Pay Consent Path and Decider (Proposed) |
+| [ADR-035](ADR-035-consent-validity-cap-365-days.md) | Consent Validity Capped at 365 Days (Proposed) |
 
 ## Superseded texts
 
