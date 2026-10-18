@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-044). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
+All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-052). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
 
 | ADR | Decision |
 |---|---|
@@ -47,6 +47,14 @@ All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-num
 | [ADR-041](ADR-041-camunda-holds-no-money-rules-or-personal-data.md) | Camunda Holds No Money, Rules or Personal Data (Proposed) |
 | [ADR-042](ADR-042-first-orchestrated-flows-tpp-account-opening-then-instant-exception.md) | First Orchestrated Flows: TPP Account Opening, Then the Instant-Payment Exception (Proposed) |
 | [ADR-043](ADR-043-one-payment-scheme-gateway-per-rail-family.md) | One Payment-Scheme Gateway per Rail Family (Proposed) |
+| [ADR-044](ADR-044-digital-currency-wallet-context.md) | Digital Currency Wallet Context (`dcw`) (Proposed) |
+| [ADR-045](ADR-045-digital-currency-ledger-treatment.md) | Digital Currency in the Accounts Ledger: Deposit Leg and Inventory Control Account (Proposed) |
+| [ADR-046](ADR-046-digital-currency-v1-scope-and-custody.md) | Digital Currency v1 Scope, Key Custody and Limits (Proposed) |
+| [ADR-047](ADR-047-process-orchestration-repository-and-contract-dependencies.md) | Process Orchestration Repository and Contract-Only Dependencies (Proposed) |
+| [ADR-048](ADR-048-engagement-rewards-context-deterministic-rewards.md) | Engagement Rewards Context (`rwd`) and Deterministic Rewards Only (Proposed) |
+| [ADR-049](ADR-049-card-processing-through-certified-processor.md) | Card Processing Through a Certified Processor Behind a Thin `crd` Context (Proposed) |
+| [ADR-050](ADR-050-consent-validity-profile-per-jurisdiction.md) | Consent Validity Profile per Jurisdiction (Proposed) |
+| [ADR-051](ADR-051-turkish-payment-scheme-gateway-scope.md) | Turkish Payment-Scheme Gateway (`psg-tr`): One Service, Three Deployments, First Scope (Proposed) |
 
 ## Superseded texts
 

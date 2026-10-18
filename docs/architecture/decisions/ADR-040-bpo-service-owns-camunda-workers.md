@@ -10,7 +10,7 @@ Proposed
 
 ## Context
 
-- The Camunda client starter supports Spring Boot 3.5.x and 4.1.x. Our services run on Boot 3.3, which is outside that range.
+- The Camunda client starter supports Spring Boot 3.5.x and 4.1.x ([supported environments](https://docs.camunda.io/docs/reference/supported-environments/); [starter migration](https://docs.camunda.io/docs/apis-tools/migration-manuals/migrate-to-camunda-spring-boot-starter/)). Our services run on Boot 3.3, which is outside that range.
 - Domain services must not depend on the process engine (F5-K6).
 - Human tasks need one controlled entry point for the staff web.
 
@@ -18,7 +18,7 @@ Proposed
 
 1. A new repository, context code `bpo`, holds the Camunda client and every job worker. It contains:
    - `bpo-process-api`: start and status queries, and the human-task entry point that the staff web uses. Personal data stays out of Camunda.
-   - `bpo-worker-<family>`: job workers per family (payments, lending, onboarding, compliance). Each family has its own deployment and its own Keycloak client (ADR-020).
+   - `bpo-worker-<family>`: job workers per family (onboarding, payments, lending, compliance; `cards` and `engagement` once ADR-049 and ADR-048 are accepted). Each family has its own deployment and its own Keycloak client (ADR-020).
    - `bpo-event-bridge`: Kafka messages in, Camunda messages out, and process milestones published to `evt.bpo.process.v1`.
 2. Workers call domain services through their published APIs, as an anti-corruption layer, using mTLS and client credentials. They never read another service's tables.
 3. `bpo` runs on Spring Boot 4.1.x.
@@ -38,4 +38,4 @@ Proposed
 
 ## Related
 
-ADR-002, ADR-020, ADR-028, ADR-038, ADR-041.
+ADR-002, ADR-020, ADR-028, ADR-038, ADR-041, ADR-047.

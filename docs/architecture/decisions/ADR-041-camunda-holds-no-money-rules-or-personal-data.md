@@ -17,8 +17,8 @@ Proposed
 
 1. Camunda owns process instance state and history, timers, human tasks and the order of compensation steps.
 2. Camunda never owns balances, holds, journals, limits, fees, interest, FX, instalment allocation, risk or compliance decisions, or personal data.
-3. Process variables are limited to business keys (`paymentId`, `applicationId`, `bulkId`, `caseId`, `consentId`, end-to-end id), status and reason enums, DMN outputs, retry counters, deadlines, trace ids and the staff id used for four-eyes checks. An amount may appear only as a band that the domain service sets.
-4. No personal data, document content, ISO 20022 message bodies or screening-list detail appear in variables. The target is 8 KB per instance, with a hard limit of 64 KB.
+3. Process variables are limited to business keys (`paymentId`, `applicationId`, `bulkId`, `caseId`, `consentId`, end-to-end id), status and reason enums, DMN outputs, retry counters, deadlines, trace ids and the four-eyes result as a count (`approvalsRecorded`), which `bpo-process-api` sets after it checks that the approver and the maker differ. Staff identities stay out of the process; the owning service's audit trail records who approved. An amount may appear only as a band that the domain service sets.
+4. No personal data, card numbers (PAN), document content, ISO 20022 message bodies or screening-list detail appear in variables. The target is 8 KB per instance, with a hard limit of 64 KB.
 5. Zeebe DMN decides routing and human-workflow questions only. Domain DMN tables stay in the owning service, versioned.
 6. Compensation is an explicit compensating command in the process. BPMN compensation events are banned by the model lint.
 7. Each evidence event records the DMN version that was used.
