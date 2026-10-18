@@ -29,8 +29,8 @@ This document outlines the security fixes applied to address critical vulnerabil
 
 **Before:**
 ```yaml
-password: admin
-POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-banking_secure_pass}
+password: <hard-coded-default>
+POSTGRES_PASSWORD: <hard-coded-default>
 ```
 
 **After:**

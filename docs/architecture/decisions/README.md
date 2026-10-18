@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-017).
+All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-numbers.sh` enforces this in `ci/test`. New ADRs take the next free number (currently ADR-052). Before taking a number, also check the source monolith's ADR folders so an import cannot collide again.
 
 | ADR | Decision |
 |---|---|
@@ -20,7 +20,52 @@ All ADRs live in this folder, one number per decision. `scripts/ci/check-adr-num
 | [ADR-014](ADR-014-ai-ml-architecture.md) | AI/ML Architecture |
 | [ADR-015](ADR-015-open-finance-source-of-truth.md) | Open Finance Source of Truth (was ADR-007 in `docs/architecture/adr/`) |
 | [ADR-016](ADR-016-open-finance-integration.md) | Open Finance Integration Architecture (was ADR-012 in `docs/adr/`) |
+| [ADR-017](ADR-017-open-finance-bounded-context-eventing-deployment.md) | Open Finance Bounded-Context Eventing and Portable Deployment (was ADR-015 in the monolith's `docs/architecture/decisions/`) |
+| [ADR-018](ADR-018-repository-taxonomy-and-monolith-alignment.md) | Repository Taxonomy and Monolith Alignment (Proposed) |
+| [ADR-019](ADR-019-kafka-topic-and-event-naming.md) | Kafka Topic and Event Naming (Proposed) |
+| [ADR-020](ADR-020-service-to-service-token-policy.md) | Service-to-Service Token Policy (Proposed) |
+| [ADR-021](ADR-021-database-per-service-and-data-migration.md) | Database per Service and Data Migration (Proposed) |
+| [ADR-022](ADR-022-contract-catalogs-ownership.md) | Contract Catalogs Ownership (Proposed) |
+| [ADR-023](ADR-023-kubernetes-namespace-per-bounded-context.md) | Kubernetes Namespace per Bounded Context with Mesh Default-Deny and IRSA (Proposed) |
+| [ADR-024](ADR-024-kafka-runtime-msk-iam-and-producer-defaults.md) | Kafka Runtime: Amazon MSK with IAM Auth and Producer Defaults (Proposed) |
+| [ADR-025](ADR-025-resource-server-token-validation.md) | Resource-Server Token Validation: Issuer, Audience, DPoP (Proposed) |
+| [ADR-026](ADR-026-incremental-backfill-before-cutover.md) | Incremental (Upsert) Backfill Until Cut-Over (Proposed) |
+| [ADR-027](ADR-027-ci-runs-check-with-coverage-gate.md) | CI Runs `check` So Quality Gates Are Enforced (Proposed) |
+| [ADR-028](ADR-028-hexagonal-guardrails-profile-for-split-repositories.md) | Hexagonal Guardrails Profile for the Split Repositories (Proposed) |
+| [ADR-029](ADR-029-test-first-and-monolith-regression-parity.md) | Test-First Delivery and Regression Parity with the Monolith as Fitness Functions (Proposed) |
+| [ADR-030](ADR-030-homes-for-unhomed-monolith-capabilities.md) | Homes for Unhomed Monolith Capabilities (Proposed) |
+| [ADR-031](ADR-031-credit-score-on-events-and-loan-eligibility.md) | Credit Score on Events and Loan Eligibility Ownership (Proposed) |
+| [ADR-032](ADR-032-compliance-reason-codes-and-screening-facts.md) | Compliance Reason Codes and Screening Facts (Proposed) |
+| [ADR-033](ADR-033-psu-authorises-vrp-and-bulk-payments.md) | The PSU Authorises VRP and Bulk Payments (Proposed) |
+| [ADR-034](ADR-034-request-to-pay-consent-path-and-decider.md) | Request-to-Pay Consent Path and Decider (Proposed) |
+| [ADR-035](ADR-035-consent-validity-cap-365-days.md) | Consent Validity Capped at 365 Days (Proposed) |
+| [ADR-036](ADR-036-core-accounts-stay-in-accounts-ledger.md) | Core Banking Accounts Stay in the Accounts Ledger (Proposed) |
+| [ADR-037](ADR-037-account-holds-owned-by-accounts-ledger.md) | Account Holds Move to the Accounts Ledger (Proposed) |
+| [ADR-038](ADR-038-camunda-8-self-managed-process-orchestrator.md) | Camunda 8.10 Self-Managed as the Process Orchestrator (Proposed) |
+| [ADR-039](ADR-039-one-camunda-cluster-per-jurisdiction.md) | One Camunda Cluster per Jurisdiction, No Tenants (Proposed) |
+| [ADR-040](ADR-040-bpo-service-owns-camunda-workers.md) | Camunda Workers and Process API in a Separate `bpo` Service (Proposed) |
+| [ADR-041](ADR-041-camunda-holds-no-money-rules-or-personal-data.md) | Camunda Holds No Money, Rules or Personal Data (Proposed) |
+| [ADR-042](ADR-042-first-orchestrated-flows-tpp-account-opening-then-instant-exception.md) | First Orchestrated Flows: TPP Account Opening, Then the Instant-Payment Exception (Proposed) |
+| [ADR-043](ADR-043-one-payment-scheme-gateway-per-rail-family.md) | One Payment-Scheme Gateway per Rail Family (Proposed) |
+| [ADR-044](ADR-044-digital-currency-wallet-context.md) | Digital Currency Wallet Context (`dcw`) (Proposed) |
+| [ADR-045](ADR-045-digital-currency-ledger-treatment.md) | Digital Currency in the Accounts Ledger: Deposit Leg and Inventory Control Account (Proposed) |
+| [ADR-046](ADR-046-digital-currency-v1-scope-and-custody.md) | Digital Currency v1 Scope, Key Custody and Limits (Proposed) |
+| [ADR-047](ADR-047-process-orchestration-repository-and-contract-dependencies.md) | Process Orchestration Repository and Contract-Only Dependencies (Proposed) |
+| [ADR-048](ADR-048-engagement-rewards-context-deterministic-rewards.md) | Engagement Rewards Context (`rwd`) and Deterministic Rewards Only (Proposed) |
+| [ADR-049](ADR-049-card-processing-through-certified-processor.md) | Card Processing Through a Certified Processor Behind a Thin `crd` Context (Proposed) |
+| [ADR-050](ADR-050-consent-validity-profile-per-jurisdiction.md) | Consent Validity Profile per Jurisdiction (Proposed) |
+| [ADR-051](ADR-051-turkish-payment-scheme-gateway-scope.md) | Turkish Payment-Scheme Gateway (`psg-tr`): One Service, Three Deployments, First Scope (Proposed) |
 
 ## Superseded texts
 
 ADR-009 and ADR-010 each existed twice: a December 2024 text and a 2025-01-08 revision. The revision is current; the older texts are kept in [superseded/](superseded/).
+
+## Renumbering map
+
+Numbers changed when ADRs from several monolith folders were brought into this one folder. Source paths are in `enterprise-loan-management-system`.
+
+| Here | Monolith source | Reason |
+|---|---|---|
+| ADR-015 | `docs/architecture/adr/ADR-007-open-finance-source-of-truth.md` | ADR-007 is Docker Multi-Stage Architecture |
+| ADR-016 | `docs/adr/ADR-012-open-finance-integration.md` | ADR-012 is International Banking Compliance Framework |
+| ADR-017 | `docs/architecture/decisions/ADR-015-open-finance-bounded-context-eventing-deployment.md` | ADR-015 is Open Finance Source of Truth |
